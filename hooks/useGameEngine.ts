@@ -119,6 +119,7 @@ const getInitialMetaProgress = (): MetaProgressState => {
         furyAwakeningProgress: 0,
         nextFuryToAwakenIndex: 0,
         firstSanctuaryVisit: true,
+        hasCompletedFirstRun: false,
     };
 };
 
@@ -443,6 +444,8 @@ export const useGameEngine = () => {
     const { rows, cols, densityPercent, objectRatioKey, traps, irregularPatternType } = params;
     const totalCells = rows * cols;
 
+    const isFTUERun = metaProgress.hasCompletedFirstRun === false;
+
     let newBoard: BoardState = Array(rows).fill(null).map((_, r_idx) =>
         Array(cols).fill(null).map((_, c_idx): CellState => ({
             id: `cell-${r_idx}-${c_idx}-${gameState.currentLevel}-${gameState.currentArenaLevel}-${gameState.currentBiomeId}`,
@@ -469,25 +472,48 @@ export const useGameEngine = () => {
     }
 
     const numTotalItemsToPlaceBasedOnDensity = Math.floor(effectiveTotalCells * (densityPercent / 100));
-    const ratioDef = OBJECT_RATIO_DEFINITIONS[objectRatioKey];
-    if (!ratioDef) throw new Error(`Object ratio definition not found for key: ${objectRatioKey}`);
 
-    const ratioPartsSum = ratioDef.attacks + ratioDef.gold;
+    // For FTUE, objectRatioKey might be 'ftueAttackClueOnly', which won't be in OBJECT_RATIO_DEFINITIONS.
+    // We handle this by overriding numGold and numAttacks later.
+    const ratioDef = !isFTUERun ? OBJECT_RATIO_DEFINITIONS[objectRatioKey] : null;
+    if (!isFTUERun && !ratioDef) {
+        console.warn(`Object ratio definition not found for key: ${objectRatioKey}. Using fallback.`);
+        // Fallback or default ratio if a key is bad and not in FTUE
+        // For now, this error will propagate if not FTUE. FTUE handles it.
+    }
+    if (!ratioDef && !isFTUERun) throw new Error(`Object ratio definition not found for key: ${objectRatioKey}`);
+
+
     let numAttacks = 0, numGold = 0;
 
-    if (ratioPartsSum > 0) {
-        numAttacks = Math.floor(numTotalItemsToPlaceBasedOnDensity * (ratioDef.attacks / ratioPartsSum));
-        numGold = Math.floor(numTotalItemsToPlaceBasedOnDensity * (ratioDef.gold / ratioPartsSum));
+    if (!isFTUERun && ratioDef) { // Standard calculation for non-FTUE
+        const ratioPartsSum = ratioDef.attacks + ratioDef.gold;
+        if (ratioPartsSum > 0) {
+            numAttacks = Math.floor(numTotalItemsToPlaceBasedOnDensity * (ratioDef.attacks / ratioPartsSum));
+            numGold = Math.floor(numTotalItemsToPlaceBasedOnDensity * (ratioDef.gold / ratioPartsSum));
+        }
+    } else if (isFTUERun) {
+        numGold = 0; // Force no gold for FTUE
+        numAttacks = numTotalItemsToPlaceBasedOnDensity; // All items are attacks
     }
 
-    const cellsAvailableForMainItems = effectiveTotalCells - traps;
+    const effectiveTraps = isFTUERun ? 0 : traps;
+    const cellsAvailableForMainItems = effectiveTotalCells - effectiveTraps;
     let currentMainItemSum = numAttacks + numGold;
 
     if (currentMainItemSum > cellsAvailableForMainItems) {
         const overflow = currentMainItemSum - cellsAvailableForMainItems;
-        numAttacks = Math.max(0, numAttacks - Math.ceil(overflow / 2)); // Adjusted for 2 item types
-        numGold = Math.max(0, numGold - Math.floor(overflow / 2)); // Adjusted
+        if (isFTUERun) { // In FTUE, only attacks can overflow
+            numAttacks = Math.max(0, numAttacks - overflow);
+        } else { // Non-FTUE, distribute overflow reduction
+            numAttacks = Math.max(0, numAttacks - Math.ceil(overflow / (numGold > 0 ? 2 : 1) ));
+            if (numGold > 0) {
+                 numGold = Math.max(0, numGold - Math.floor(overflow / 2));
+            }
+        }
     }
+    currentMainItemSum = numAttacks + numGold; // Recalculate sum after adjustment
+
 
     const placeItemsOnBoard = (count: number, itemType: CellType, boardToPlaceOn: BoardState) => {
         let placedCount = 0; let attempts = 0;
@@ -504,19 +530,26 @@ export const useGameEngine = () => {
         if (placedCount < count) console.warn(`Could not place all ${itemType} items. Requested: ${count}, Placed: ${placedCount}`);
     };
 
-    placeItemsOnBoard(traps, CellType.Trap, newBoard);
-    placeItemsOnBoard(numAttacks, CellType.Attack, newBoard);
-    placeItemsOnBoard(numGold, CellType.Gold, newBoard);
+    if (!isFTUERun) {
+        placeItemsOnBoard(effectiveTraps, CellType.Trap, newBoard);
+    }
+    placeItemsOnBoard(numAttacks, CellType.Attack, newBoard); // Attacks are always placed
+    if (!isFTUERun) {
+        placeItemsOnBoard(numGold, CellType.Gold, newBoard);
+    }
 
     newBoard = recalculateAllClues(newBoard);
     newBoard = updateBoardVisualEffects(newBoard, currentActiveEcosArg);
 
     setGameState(prev => ({...prev, currentBoardDimensions: { rows, cols }}));
     return newBoard;
-  }, [recalculateAllClues, updateBoardVisualEffects, gameState.currentLevel, gameState.currentArenaLevel, gameState.currentBiomeId]);
+  }, [recalculateAllClues, updateBoardVisualEffects, gameState.currentLevel, gameState.currentArenaLevel, gameState.currentBiomeId, metaProgress.hasCompletedFirstRun]);
 
 
   const generateEchoChoicesForPostLevelScreen = useCallback((levelCompleted: number, currentActiveEcos: Echo[], currentPlayer: PlayerState, currentMetaProgress: MetaProgressState): Echo[] => {
+    if (currentMetaProgress.hasCompletedFirstRun === false) {
+      return []; // Return no Echo choices for FTUE
+    }
     console.log("[GenerateChoices] Unlocked Base IDs in MetaProgress:", currentMetaProgress.unlockedEchoBaseIds);
     if (levelCompleted === PROLOGUE_LEVEL_ID && gameState.isPrologueActive) {
         const prologueChoices = PROLOGUE_PREDEFINED_ECHO_CHOICES_BASE_IDS
@@ -693,7 +726,7 @@ export const useGameEngine = () => {
     const effectiveOracleFury = oracleFury || (isTransitioningFromPrologue ? INITIAL_STARTING_FURIESS[0] : PROLOGUE_SHADOW_EMBER_FURY_ABILITY);
 
 
-    const encounter = generateEncounterForFloor(currentFloor, levelForNextSetup, effectiveOracleFury);
+    const encounter = generateEncounterForFloor(currentFloor, levelForNextSetup, effectiveOracleFury, metaProgress);
     setEnemy(encounter.enemy);
 
     let finalBoardParams = encounter.boardParams;
@@ -1216,16 +1249,23 @@ export const useGameEngine = () => {
     } else if (newEnemyState.currentHp <= 0) {
       playMidiSoundPlaceholder('enemy_defeat');
       GoalTrackingService.processEvent('ENEMY_DEFEATED', { enemyArchetypeId: newEnemyState.archetypeId } as GoalEnemyDefeatedPayload, metaProgress, setAndSaveMetaProgress);
+
+      const isFTUERun = metaProgress.hasCompletedFirstRun === false;
       setRunStats(prev => ({ ...prev, enemiesDefeatedThisRun: prev.enemiesDefeatedThisRun + 1, soulFragmentsEarnedThisRun: prev.soulFragmentsEarnedThisRun + SOUL_FRAGMENTS_PER_ENEMY_DEFEAT }));
+
       setAvailableEchoChoices(generateEchoChoicesForPostLevelScreen(gameState.currentLevel, activeEcos, newPlayerState, metaProgress));
+
       let mapDecisionNowPending = false;
-      if (!gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch -1 ) mapDecisionNowPending = true;
+      if (!isFTUERun && !gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch -1 ) {
+        mapDecisionNowPending = true;
+      }
+
       setGameState(prev => ({
         ...prev,
         status: GameStatus.PostLevel,
         mapDecisionPending: mapDecisionNowPending,
-        furyMinigameCompletedForThisLevel: false, // Reset for next level's Fury Oracle
-        postLevelActionTaken: false, // Reset for Echo choice
+        postLevelActionTaken: isFTUERun ? true : false,
+        furyMinigameCompletedForThisLevel: isFTUERun ? true : false,
         // currentPhase will be handled by ENEMY_ACTION_RESOLVING -> PLAYER_TURN transition
       }));
     }
@@ -1378,16 +1418,23 @@ export const useGameEngine = () => {
     } else if (newEnemyState.currentHp <= 0) {
       playMidiSoundPlaceholder('enemy_defeat');
       GoalTrackingService.processEvent('ENEMY_DEFEATED', { enemyArchetypeId: newEnemyState.archetypeId } as GoalEnemyDefeatedPayload, metaProgress, setAndSaveMetaProgress);
+
+      const isFTUERun = metaProgress.hasCompletedFirstRun === false;
       setRunStats(prev => ({ ...prev, enemiesDefeatedThisRun: prev.enemiesDefeatedThisRun + 1, soulFragmentsEarnedThisRun: prev.soulFragmentsEarnedThisRun + SOUL_FRAGMENTS_PER_ENEMY_DEFEAT }));
+
       setAvailableEchoChoices(generateEchoChoicesForPostLevelScreen(gameState.currentLevel, activeEcos, newPlayerState, metaProgress));
+
       let mapDecisionNowPending = false;
-      if (!gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch -1 ) mapDecisionNowPending = true;
+      if (!isFTUERun && !gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch -1 ) {
+        mapDecisionNowPending = true;
+      }
+
       setGameState(prev => ({
         ...prev,
         status: GameStatus.PostLevel,
         mapDecisionPending: mapDecisionNowPending,
-        furyMinigameCompletedForThisLevel: false, // Reset for next level's Fury Oracle
-        postLevelActionTaken: false, // Reset for Echo choice
+        postLevelActionTaken: isFTUERun ? true : false,
+        furyMinigameCompletedForThisLevel: isFTUERun ? true : false,
         currentPhase: GamePhase.PLAYER_ACTION_RESOLVING, // Player action is resolving
       }));
       return;
@@ -1716,9 +1763,12 @@ export const useGameEngine = () => {
     setEnemy(prev => ({...prev, currentHp: 0}));
     GoalTrackingService.processEvent('ENEMY_DEFEATED', { enemyArchetypeId: enemy.archetypeId } as GoalEnemyDefeatedPayload, metaProgress, setAndSaveMetaProgress);
     setRunStats(prev => ({ ...prev, enemiesDefeatedThisRun: prev.enemiesDefeatedThisRun + 1, soulFragmentsEarnedThisRun: prev.soulFragmentsEarnedThisRun + SOUL_FRAGMENTS_PER_ENEMY_DEFEAT }));
+
+    const isFTUERun = metaProgress.hasCompletedFirstRun === false;
     setAvailableEchoChoices(generateEchoChoicesForPostLevelScreen(gameState.currentLevel, activeEcos, player, metaProgress));
+
     let mapDecisionNowPending = false;
-    if (!gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch - 1) {
+    if (!isFTUERun && !gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch - 1) {
         mapDecisionNowPending = true;
         if (gameState.stretchRewardPending) {
             const reward = gameState.stretchRewardPending; let newSoulFragments = runStats.soulFragmentsEarnedThisRun + SOUL_FRAGMENTS_PER_ENEMY_DEFEAT;
@@ -1731,12 +1781,12 @@ export const useGameEngine = () => {
     setGameState(prev => ({
       ...prev,
       status: GameStatus.PostLevel,
-      furyMinigameCompletedForThisLevel: false, // Ensure Fury minigame is triggered
-      postLevelActionTaken: false, // Ensure Echo choice is triggered
+      postLevelActionTaken: isFTUERun ? true : false,
+      furyMinigameCompletedForThisLevel: isFTUERun ? true : false,
       prologueStep: (prev.isPrologueActive && prev.currentLevel === PROLOGUE_LEVEL_ID) ? 7 : prev.prologueStep,
       guidingTextKey: (prev.isPrologueActive && prev.currentLevel === PROLOGUE_LEVEL_ID) ? 7 as keyof typeof PROLOGUE_MESSAGES : prev.guidingTextKey,
       mapDecisionPending: mapDecisionNowPending,
-      // currentPhase: prev.currentPhase, // Let currentPhase remain as is or set to a neutral post-level phase if desired
+      // currentPhase: prev.currentPhase,
     }));
   }, [gameState, enemy.archetypeId, activeEcos, player, metaProgress, setAndSaveMetaProgress, generateEchoChoicesForPostLevelScreen, addGameEvent, runStats.soulFragmentsEarnedThisRun]);
 

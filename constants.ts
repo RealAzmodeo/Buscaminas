@@ -283,6 +283,9 @@ const ALL_GAME_FURY_ABILITIES_BASE: FuryAbility[] = [
   { id: 'fury_vigor_momentaneo', name: "Vigor Momentáneo", description: "Enemigo recupera <strong>3 HP</strong>.", icon: "💪❤️", effectType: FuryAbilityEffectType.EnemyHeal, value: 3, rarity: Rarity.Common },
   { id: 'fury_resistencia_impia', name: "Resistencia Impía", description: "Enemigo gana <strong>5 Armadura</strong> temporal.", icon: "🛡️👿", effectType: FuryAbilityEffectType.EnemyGainArmor, value: 5, rarity: Rarity.Rare },
   { id: 'fury_festin_oscuro', name: "Festín Oscuro", description: "Enemigo recupera <strong>5 HP</strong> y su Furia se carga un <strong>25%</strong>.", icon: "🍽️👿", effectType: FuryAbilityEffectType.EnemyHealAndFuryCharge, value: { heal: 5, furyChargePercent: 0.25 }, rarity: Rarity.Epic },
+  // FTUE Sentinel Furies
+  { id: 'fury_ftue_sentinel_level3', name: "Mirada Penetrante", description: "El Centinela te inflige <strong>1 daño</strong> y revela una casilla aleatoria (revelación no implementada en este efecto aún).", icon: "👁️‍🗨️⚡", effectType: FuryAbilityEffectType.PlayerDamage, value: 1, rarity: Rarity.Common },
+  { id: 'fury_ftue_sentinel_level4', name: "Acometida Resonante", description: "El Centinela te inflige <strong>2 daños</strong>.", icon: "👁️‍🗨️⚡⚡", effectType: FuryAbilityEffectType.PlayerDamage, value: 2, rarity: Rarity.Common },
 ];
 
 /** Comprehensive list of all Fury abilities in the game, ensuring no duplicates by ID. */

@@ -4,10 +4,14 @@ import {
   FloorDefinition,
   FuryAbility,
   BoardParameters,
-  EnemyArchetypeId, // Added EnemyArchetypeId
+  EnemyArchetypeId,
   EnemyRank,
+  MetaProgressState, // Added
+  AIType,            // Added
+  BoardParameters,   // Added for ftueBoardParams
 } from '../types';
 import { FLOOR_DEFINITIONS, ENEMY_ARCHETYPE_DEFINITIONS } from '../constants/difficultyConstants';
+import { ALL_FURY_ABILITIES_MAP } from '../constants'; // Added
 import { createEnemyInstance } from './enemyFactory';
 
 // Helper to get a random integer in a range (inclusive)
@@ -45,10 +49,91 @@ const selectWeightedRandom = <T extends { weight: number }>(items: T[]): T | nul
 };
 
 export const generateEncounterForFloor = (
-  floorNumber: number,
+  floorNumber: number, // Effectively unused during FTUE
   currentRunLevel: number,
-  oracleFuryAbility: FuryAbility,
+  oracleFuryAbility: FuryAbility, // Effectively unused during FTUE
+  metaProgress: MetaProgressState // Added
 ): Encounter => {
+  if (metaProgress.hasCompletedFirstRun === false) {
+    let ftueArchetypeId: EnemyArchetypeId;
+    let ftueRank = EnemyRank.Minion;
+    let ftueHp: number;
+    let ftueFuryAbility: FuryAbility;
+    let ftueAiType: AIType = AIType.Default; // Default "Cazador Paciente" for FTUE
+    let ftueFuryActivationThreshold: number = 10;
+
+    // FTUE Board Parameters
+    let ftueBoardParams: BoardParameters = {
+      rows: currentRunLevel === 0 ? 7 : 8, // FTUE L1 (runLevel 0) is 7x7, L2+ is 8x8
+      cols: currentRunLevel === 0 ? 7 : 8,
+      densityPercent: 15 + Math.floor(currentRunLevel / 2), // Low, increases slightly
+      objectRatioKey: 'ftueAttackClueOnly', // Placeholder for Attack/Clue only content
+      traps: 0,
+      irregularPatternType: null,
+    };
+
+    if (currentRunLevel === 0) { // FTUE Level 1 (corresponds to GDD Level 1)
+      ftueArchetypeId = EnemyArchetypeId.ShadowEmber; // "Fragmento Resonante"
+      ftueHp = 2;
+      const chispaAgonica = ALL_FURY_ABILITIES_MAP.get('fury_shadow_ember_spark_prologue');
+      if (!chispaAgonica) throw new Error("FTUE Fury 'fury_shadow_ember_spark_prologue' not found!");
+      ftueFuryAbility = chispaAgonica;
+      ftueFuryActivationThreshold = 10; // Override ShadowEmber's default, GDD: 10 clicks
+      ftueAiType = AIType.Default; // Explicitly "Cazador Paciente"
+    } else if (currentRunLevel === 1) { // FTUE Level 2 (corresponds to GDD Level 2)
+      ftueArchetypeId = EnemyArchetypeId.CentinelaDelAbismoFTUE;
+      ftueHp = 4;
+      const toqueDelVacio = ALL_FURY_ABILITIES_MAP.get('fury_toque_vacio_initial');
+      if (!toqueDelVacio) throw new Error("FTUE Fury 'fury_toque_vacio_initial' not found!");
+      ftueFuryAbility = toqueDelVacio;
+      ftueFuryActivationThreshold = 10; // GDD: 10 clicks
+      ftueAiType = AIType.Default; // Explicitly "Cazador Paciente"
+    } else { // FTUE Level 3+ (currentRunLevel >= 2, corresponds to GDD Level 3+)
+      ftueArchetypeId = EnemyArchetypeId.Centinela; // Regular Centinela archetype
+      ftueHp = 4 + (currentRunLevel - 1); // Scales: L3(runLvl 2)=5HP, L4(runLvl 3)=6HP, L5(runLvl 4)=7HP
+
+      if (currentRunLevel === 2) { // FTUE Level 3 (GDD L3)
+        ftueAiType = AIType.Default; // "Cazador Paciente"
+        const miradaPenetrante = ALL_FURY_ABILITIES_MAP.get('fury_ftue_sentinel_level3');
+        if (!miradaPenetrante) throw new Error("FTUE Fury 'fury_ftue_sentinel_level3' not found!");
+        ftueFuryAbility = miradaPenetrante;
+        ftueFuryActivationThreshold = 12; // GDD: 12 clicks
+      } else { // FTUE Level 4+ (GDD L4+, currentRunLevel >= 3)
+        ftueAiType = AIType.Calculator; // Evolves to "Calculador"
+        const acometidaResonante = ALL_FURY_ABILITIES_MAP.get('fury_ftue_sentinel_level4');
+        if (!acometidaResonante) throw new Error("FTUE Fury 'fury_ftue_sentinel_level4' not found!");
+        ftueFuryAbility = acometidaResonante;
+        // GDD L4: 10 clicks, L5: 8 clicks. For now, use 10 for L4+, can be refined.
+        ftueFuryActivationThreshold = currentRunLevel === 3 ? 10 : 8;
+      }
+    }
+
+    const enemyInstance = createEnemyInstance(ftueArchetypeId, ftueRank, currentRunLevel, ftueFuryAbility);
+
+    enemyInstance.currentHp = ftueHp;
+    enemyInstance.maxHp = ftueHp;
+    enemyInstance.furyActivationThreshold = ftueFuryActivationThreshold;
+    enemyInstance.furyAbilities = [ftueFuryAbility];
+    enemyInstance.activeFuryCycleIndex = 0;
+
+    // Override AI type if necessary. createEnemyInstance uses the archetype's default AI.
+    // The baseArchetype on the instance is a copy, so changing it here is safe for this instance.
+    if (enemyInstance.baseArchetype.aiType !== ftueAiType) {
+        enemyInstance.baseArchetype.aiType = ftueAiType;
+    }
+    // If AIPlayer object is directly on enemyInstance and needs re-init:
+    // if (enemyInstance.aiPlayer && enemyInstance.aiPlayer.getAIType() !== ftueAiType) {
+    //   enemyInstance.aiPlayer = new AIPlayer(ftueAiType); // Or however AI is managed
+    // }
+
+
+    return {
+      enemy: enemyInstance,
+      boardParams: ftueBoardParams,
+    };
+  }
+
+  // --- Existing Non-FTUE logic starts here ---
   const floorDef = FLOOR_DEFINITIONS.find(f => f.floorNumber === floorNumber);
   if (!floorDef) {
     throw new Error(`Floor definition not found for floor number: ${floorNumber}`);

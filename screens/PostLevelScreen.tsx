@@ -21,7 +21,8 @@ const PostLevelScreen: React.FC<PostLevelScreenProps> = ({ gameEngine }) => {
     fullActiveEcos, 
     gameState,
     resolveCorazonDelAbismoChoice,
-    setGameStatus, 
+    setGameStatus,
+    metaProgress, // Added metaProgress
   } = gameEngine;
 
   const [processingSelectionEchoId, setProcessingSelectionEchoId] = useState<string | null>(null);
@@ -79,44 +80,53 @@ const PostLevelScreen: React.FC<PostLevelScreenProps> = ({ gameEngine }) => {
 
   const activeEchoIdsFromPlayerActiveEcos: ActiveEchoId[] = activeEcos.map(e => e.id); 
   const currentCorazonOptions = gameState.corazonDelAbismoOptions;
-
+  const isFTUERun = metaProgress.hasCompletedFirstRun === false;
 
   return (
     <div className="flex flex-col items-center justify-center p-4 w-full min-h-[80vh]">
-      <div className="mb-6 text-center">
-        <h2 className="text-3xl font-bold text-green-400">¡Nivel {gameState.currentLevel} Superado!</h2>
-        <p className="text-slate-300 mt-1" id="postLevelMessage">
-          {gameState.isCorazonDelAbismoChoiceActive
-            ? "El Corazón del Abismo exige una ofrenda..."
-            : "Los Ecos de la batalla resuenan. Elige tu bendición."}
-        </p>
-      </div>
-
-      {fullActiveEcos.length > 0 && (
-        <div className="mb-6 w-full max-w-3xl p-3 bg-slate-700/60 rounded-lg shadow-md">
-           <EchoesDisplay
-              activeEcos={fullActiveEcos} 
-              player={player}
-              conditionalEchoTriggeredId={gameState.conditionalEchoTriggeredId}
-            />
+      {isFTUERun ? (
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-slate-200">El descenso continúa...</h2>
+          <p className="text-xl text-slate-400 mt-2">Siguiente Nivel: {gameState.currentLevel + 1}</p>
         </div>
-      )}
-
-      {gameState.isCorazonDelAbismoChoiceActive && currentCorazonOptions ? (
-        <CorazonDelAbismoChoiceUI
-          {...currentCorazonOptions} 
-          onChoice={handleCorazonChoice}
-          playerGold={player.gold}
-        />
       ) : (
-        <EchoSelectionUI
-          echoOptions={availableEchoChoices}
-          player={player} 
-          onSelectEcho={handleEchoSelection}
-          activeEcos={activeEchoIdsFromPlayerActiveEcos} 
-          isUiDisabled={processingSelectionEchoId !== null || gameState.isFuryMinigameActive || gameState.isCorazonDelAbismoChoiceActive}
-          animatingEchoId={processingSelectionEchoId}
-        />
+        <>
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl font-bold text-green-400">¡Nivel {gameState.currentLevel} Superado!</h2>
+            <p className="text-slate-300 mt-1" id="postLevelMessage">
+              {gameState.isCorazonDelAbismoChoiceActive
+                ? "El Corazón del Abismo exige una ofrenda..."
+                : "Los Ecos de la batalla resuenan. Elige tu bendición."}
+            </p>
+          </div>
+
+          {fullActiveEcos.length > 0 && (
+            <div className="mb-6 w-full max-w-3xl p-3 bg-slate-700/60 rounded-lg shadow-md">
+              <EchoesDisplay
+                activeEcos={fullActiveEcos}
+                player={player}
+                conditionalEchoTriggeredId={gameState.conditionalEchoTriggeredId}
+              />
+            </div>
+          )}
+
+          {gameState.isCorazonDelAbismoChoiceActive && currentCorazonOptions ? (
+            <CorazonDelAbismoChoiceUI
+              {...currentCorazonOptions}
+              onChoice={handleCorazonChoice}
+              playerGold={player.gold}
+            />
+          ) : (
+            <EchoSelectionUI
+              echoOptions={availableEchoChoices}
+              player={player}
+              onSelectEcho={handleEchoSelection}
+              activeEcos={activeEchoIdsFromPlayerActiveEcos}
+              isUiDisabled={processingSelectionEchoId !== null || gameState.isFuryMinigameActive || gameState.isCorazonDelAbismoChoiceActive}
+              animatingEchoId={processingSelectionEchoId}
+            />
+          )}
+        </>
       )}
     </div>
   );

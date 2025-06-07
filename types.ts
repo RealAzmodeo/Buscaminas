@@ -198,6 +198,8 @@ export enum EnemyArchetypeId {
   Centinela = 'centinela',
   /** Special prologue enemy. */
   ShadowEmber = 'shadow_ember_prologue',
+  /** FTUE Level 2 enemy. */
+  CentinelaDelAbismoFTUE = 'centinela_del_abismo_ftue',
 }
 
 /**
@@ -1197,6 +1199,8 @@ export interface MetaProgressState {
   furyAwakeningProgress: number;
   /** Index in the `FURY_ABILITIES_TO_AWAKEN_SEQUENTIALLY` array, indicating the next Fury to awaken. */
   nextFuryToAwakenIndex: number;
+  /** True if the player has completed the initial FTUE run (Descenso Inevitable). */
+  hasCompletedFirstRun: boolean;
   /** True if the player has not visited the Sanctuary yet (used for FTUE). */
   firstSanctuaryVisit: boolean;
 }

@@ -144,6 +144,17 @@ export const ENEMY_ARCHETYPE_DEFINITIONS: Record<EnemyArchetypeId, EnemyArchetyp
     aiType: AIType.Default, 
     isSpecial: true, 
   },
+  [EnemyArchetypeId.CentinelaDelAbismoFTUE]: {
+    id: EnemyArchetypeId.CentinelaDelAbismoFTUE,
+    name: "Centinela del Abismo (FTUE)",
+    icon: "🛡️💧", // Placeholder icon
+    baseHp: 4, // Fixed HP for FTUE Level 2
+    hpPerLevelMultiplier: 0, // No scaling for this FTUE instance
+    baseFuryActivationThreshold: 10, // Example: FTUE Lvl 2 Fury Threshold (GDD: 10 clicks)
+    aiType: AIType.Default, // "Cazador Paciente" (Default AI is a placeholder)
+    isSpecial: true,
+    // No preferred board/density/ratio keys as FTUE boards are typically predefined
+  },
 };
 
 // --- Rank Definitions ---
