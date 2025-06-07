@@ -40,7 +40,8 @@ export const createEnemyInstance = (
 
   if (archetypeId === EnemyArchetypeId.ShadowEmber && currentRunLevel === PROLOGUE_LEVEL_ID) {
     // Special case for Prologue Enemy as per user request ("salvo el primero")
-    maxHp = archetypeDef.baseHp; // This is 2 for ShadowEmber
+    // We know ShadowEmber always has baseHp defined in its ENEMY_ARCHETYPE_DEFINITIONS entry.
+    maxHp = archetypeDef.baseHp!;
   } else {
     // New HP Calculation
     let calculatedHp = BASE_ENEMY_HP;

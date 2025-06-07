@@ -252,6 +252,24 @@ export const PROLOGUE_BOARD_CONFIG: BoardConfig = { rows: PROLOGUE_BOARD_ROWS, c
 /** Base IDs of Echos predefined as choices after completing the prologue. */
 export const PROLOGUE_PREDEFINED_ECHO_CHOICES_BASE_IDS: string[] = [ BASE_ECHO_VISION_AUREA, 'base_vigor_fugaz_initial' ];
 
+// --- FTUE / Guiding Text Constants ---
+export const PROLOGUE_MESSAGES: Record<number | string, string> = {
+  1: "Bienvenido a Numeria's Edge. Revela casillas para encontrar tu camino.",
+  2: "Los números son <strong>Pistas</strong>. Indican cuántos objetos (<strong>Ataque</strong> u Oro) hay en las casillas adyacentes.",
+  3: "¡Una casilla de <strong>Ataque</strong>! Si la revelas tú, dañas al enemigo. Si la revela el enemigo, te daña a ti.",
+  4: "¡<strong>Oro</strong>! Acumúlalo para adquirir Ecos poderosos entre niveles.",
+  5: "¡Cuidado, una casilla de <strong>Ataque</strong> revelada por el enemigo te daña!",
+  6: "La barra de <strong>Furia</strong> del enemigo aumenta con cada casilla. Este enemigo es débil; su Furia no se desatará.",
+  7: "Has derrotado a tu primer enemigo. El Abismo responde con un Eco... Elige sabiamente.",
+  8: "Has elegido un <strong>Eco</strong>. Estos artefactos otorgan poderes pasivos.",
+  9: "Antes de adentrarte más... el Abismo exige un augurio. El <strong>Oráculo de la Agonía</strong> revelará la forma de la Furia que te espera en el próximo nivel.",
+  10: "Contempla los rostros del tormento que aguarda. Memoriza sus efectos.",
+  11: "El caos arremolina el futuro... Las cartas se mezclan.",
+  12: "Sella el pacto. ¿Qué sombra invocarás para el Nivel 1?",
+  13: "Así está escrito. Esta Furia te esperará en el Nivel 1. Prepárate.",
+  'BATTLEFIELD_REDUCTION_START': "¡No quedan más casillas de Ataque seguras! ¡El Abismo exige una conclusión!",
+  'BATTLEFIELD_REDUCTION_COMPLETE': "El campo de batalla se encoge... ¡prepárate!",
+};
 
 // --- Fury Ability Definitions ---
 

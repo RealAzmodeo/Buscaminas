@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MetaProgressState, MirrorUpgradeDefinition } from '../../../types';
+import { MetaProgressState, MirrorUpgradeDefinition, MirrorUpgradeId } from '../../../types'; // Added MirrorUpgradeId
 import Button from '../../common/Button';
-import { MIRROR_UPGRADES_CONFIG, CONFIRMATION_THRESHOLD_LUMENS, INITIAL_MAX_SOUL_FRAGMENTS } from '../../../constants/metaProgressionConstants';
+import { MIRROR_UPGRADES_CONFIG, CONFIRMATION_THRESHOLD_LUMENS } from '../../../constants/metaProgressionConstants';
+import { INITIAL_MAX_SOUL_FRAGMENTS } from '../../../constants';
 import { playMidiSoundPlaceholder } from '../../../utils/soundUtils';
 import MirrorUpgradeItem from './MirrorUpgradeItem';
 import ConfirmMirrorUpgradeModal from '../../modals/ConfirmMirrorUpgradeModal'; 
@@ -37,7 +38,7 @@ const MirrorScreen: React.FC<MirrorScreenProps> = ({ metaProgress, setMetaProgre
     }
   }, [metaProgress.willLumens, lumenDisplayValue]);
 
-  const performUpgrade = (upgradeId: string) => {
+  const performUpgrade = (upgradeId: MirrorUpgradeId) => {
     const upgradeDef = MIRROR_UPGRADES_CONFIG.find(u => u.id === upgradeId);
     if (!upgradeDef) return;
     const currentLevel = metaProgress.mirrorUpgrades[upgradeId] || 0;
@@ -59,11 +60,11 @@ const MirrorScreen: React.FC<MirrorScreenProps> = ({ metaProgress, setMetaProgre
       
       let newMaxSoulFragments = prev.maxSoulFragments;
       if (upgradeDef.appliesTo === 'playerMaxSoulFragments') {
-        const affinityUpgrade = MIRROR_UPGRADES_CONFIG.find(u => u.id === upgradeId);
-        if (affinityUpgrade) {
+        if (upgradeDef) {
             let totalBonus = 0;
             for(let i=0; i < (currentLevel + 1); i++) {
-                totalBonus += affinityUpgrade.levels[i].effectValue;
+                // Corrected to use upgradeDef instead of affinityUpgrade which was removed
+                totalBonus += upgradeDef.levels[i].effectValue;
             }
             newMaxSoulFragments = INITIAL_MAX_SOUL_FRAGMENTS + totalBonus;
         }
@@ -79,7 +80,7 @@ const MirrorScreen: React.FC<MirrorScreenProps> = ({ metaProgress, setMetaProgre
   };
 
 
-  const handleAttemptUpgrade = (upgradeId: string) => {
+  const handleAttemptUpgrade = (upgradeId: MirrorUpgradeId) => {
     const upgradeDef = MIRROR_UPGRADES_CONFIG.find(u => u.id === upgradeId);
     if (!upgradeDef) return;
 

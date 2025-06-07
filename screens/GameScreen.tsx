@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { useGameEngine, PROLOGUE_MESSAGES } from '../hooks/useGameEngine'; 
+import { useGameEngine } from '../hooks/useGameEngine';
+import { PROLOGUE_MESSAGES } from '../constants'; // Import PROLOGUE_MESSAGES from constants
 import HeaderUI from '../components/ui/HeaderUI';
 import Board from '../components/board/Board';
 import GuidingText from '../components/ui/ftue/GuidingText'; // Changed from { GuidingText }

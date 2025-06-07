@@ -260,9 +260,9 @@ export interface EnemyArchetypeDefinition {
   /** Emoji/icon for UI representation. */
   icon: string;
   /** Base health points before scaling. */
-  baseHp: number;
+  baseHp?: number; // Now optional, only used by ShadowEmber for prologue
   /** HP scaling factor per run level (e.g., 0.1 for +10% base HP per level). */
-  hpPerLevelMultiplier: number;
+  hpPerLevelMultiplier?: number; // Now optional, only used by ShadowEmber for prologue
   /** Base clicks/actions to trigger Fury. */
   baseFuryActivationThreshold: number;
   /** The AI "brain" this archetype uses. */
@@ -289,7 +289,7 @@ export interface EnemyArchetypeDefinition {
  */
 export interface RankDefinition {
   /** Multiplier for base HP. */
-  hpMultiplier: number;
+  hpMultiplier?: number; // Obsolete for general HP calculation, now optional
   /** Multiplier for Fury activation threshold (e.g., 0.8 for faster Fury). */
   furyActivationThresholdMultiplier: number;
   /** How many additional fixed Fury abilities this rank gets. */
@@ -742,7 +742,7 @@ export interface GoalLevelCompletedPayload {
  * Can be a numeric step from prologue messages or specific string keys for other events.
  */
 export type GuidingTextKey =
-  | keyof typeof import('../hooks/useGameEngine').PROLOGUE_MESSAGES // Keys from prologue messages (numeric as string or number)
+  | keyof typeof import('./constants').PROLOGUE_MESSAGES // Keys from prologue messages (numeric as string or number)
   | 'BATTLEFIELD_REDUCTION_START' // Text for when battlefield reduction starts
   | 'BATTLEFIELD_REDUCTION_COMPLETE' // Text for when battlefield reduction completes
   | ''; // Empty string for no guiding text
@@ -1110,12 +1110,24 @@ export interface MirrorUpgradeLevelDefinition {
 }
 
 /**
+ * @enum MirrorUpgradeId
+ * @description Unique identifiers for Mirror Upgrades.
+ */
+export enum MirrorUpgradeId {
+  VigorPrimordial = 'vigorPrimordial',
+  GolpeCerteroInicial = 'golpeCerteroInicial',
+  FortunaErrante = 'fortunaErrante',
+  ResguardoEfimero = 'resguardoEfimero',
+  AfinidadAlmica = 'afinidadAlmica',
+}
+
+/**
  * @interface MirrorUpgradeDefinition
  * @description Defines a Mirror Upgrade available in the Sanctuary.
  */
 export interface MirrorUpgradeDefinition {
   /** Unique ID for the Mirror Upgrade. */
-  id: string;
+  id: MirrorUpgradeId;
   /** Display name of the upgrade. */
   name: string;
   /** Emoji/icon for UI representation. */
@@ -1186,7 +1198,7 @@ export interface MetaProgressState {
   /** Current Will Lumens currency, used for Mirror Upgrades. */
   willLumens: number;
   /** Player's current level for each Mirror Upgrade, keyed by upgrade ID. */
-  mirrorUpgrades: Record<string, number>;
+  mirrorUpgrades: Record<MirrorUpgradeId, number>;
   /** Player's progress for each Goal, keyed by goal ID. */
   goalsProgress: Record<string, GoalProgress>;
   /** Base IDs of Ecos permanently unlocked in the Eco Tree. */

@@ -57,8 +57,8 @@ export const ENEMY_ARCHETYPE_DEFINITIONS: Record<EnemyArchetypeId, EnemyArchetyp
     id: EnemyArchetypeId.Centinela,
     name: "Centinela Implacable",
     icon: "🛡️",
-    baseHp: 20, // Obsoleto para HP, usado para Prólogo y referencia
-    hpPerLevelMultiplier: 0.1, // Obsoleto para HP
+    // baseHp: 20, // Obsoleto para HP
+    // hpPerLevelMultiplier: 0.1, // Obsoleto para HP
     baseFuryActivationThreshold: 15, 
     aiType: AIType.Calculator, 
     preferredBoardSizes: ['medium'],
@@ -69,8 +69,8 @@ export const ENEMY_ARCHETYPE_DEFINITIONS: Record<EnemyArchetypeId, EnemyArchetyp
     id: EnemyArchetypeId.Muro,
     name: "Muralla del Abismo",
     icon: "🧱",
-    baseHp: 30, // Obsoleto para HP
-    hpPerLevelMultiplier: 0.12, // Obsoleto para HP
+    // baseHp: 30, // Obsoleto para HP
+    // hpPerLevelMultiplier: 0.12, // Obsoleto para HP
     baseFuryActivationThreshold: 20,
     aiType: AIType.Brute, 
     preferredBoardSizes: ['large', 'medium'],
@@ -83,8 +83,8 @@ export const ENEMY_ARCHETYPE_DEFINITIONS: Record<EnemyArchetypeId, EnemyArchetyp
     id: EnemyArchetypeId.Enjambre,
     name: "Enjambre Rápido",
     icon: "💨",
-    baseHp: 12, // Obsoleto para HP
-    hpPerLevelMultiplier: 0.08, // Obsoleto para HP
+    // baseHp: 12, // Obsoleto para HP
+    // hpPerLevelMultiplier: 0.08, // Obsoleto para HP
     baseFuryActivationThreshold: 10,
     aiType: AIType.Hoarder, 
     preferredBoardSizes: ['small', 'medium'],
@@ -96,8 +96,8 @@ export const ENEMY_ARCHETYPE_DEFINITIONS: Record<EnemyArchetypeId, EnemyArchetyp
     id: EnemyArchetypeId.Ilusionista,
     name: "Embaucador Espectral",
     icon: "🎭",
-    baseHp: 18, // Obsoleto para HP
-    hpPerLevelMultiplier: 0.09, // Obsoleto para HP
+    // baseHp: 18, // Obsoleto para HP
+    // hpPerLevelMultiplier: 0.09, // Obsoleto para HP
     baseFuryActivationThreshold: 16,
     aiType: AIType.Illusionist, 
     preferredBoardSizes: ['medium', 'large'], 
@@ -111,8 +111,8 @@ export const ENEMY_ARCHETYPE_DEFINITIONS: Record<EnemyArchetypeId, EnemyArchetyp
     id: EnemyArchetypeId.Verdugo,
     name: "Verdugo Imparable",
     icon: "💀",
-    baseHp: 15, // Obsoleto para HP
-    hpPerLevelMultiplier: 0.1, // Obsoleto para HP
+    // baseHp: 15, // Obsoleto para HP
+    // hpPerLevelMultiplier: 0.1, // Obsoleto para HP
     baseFuryActivationThreshold: 12, 
     aiType: AIType.Calculator, 
     preferredBoardSizes: ['small', 'medium'],
@@ -125,8 +125,8 @@ export const ENEMY_ARCHETYPE_DEFINITIONS: Record<EnemyArchetypeId, EnemyArchetyp
     id: EnemyArchetypeId.Parasito,
     name: "Parásito Drenador",
     icon: "🦠",
-    baseHp: 22, // Obsoleto para HP
-    hpPerLevelMultiplier: 0.08, // Obsoleto para HP
+    // baseHp: 22, // Obsoleto para HP
+    // hpPerLevelMultiplier: 0.08, // Obsoleto para HP
     baseFuryActivationThreshold: 18,
     aiType: AIType.Hoarder, 
     preferredBoardSizes: ['medium'],
@@ -150,19 +150,19 @@ export const ENEMY_ARCHETYPE_DEFINITIONS: Record<EnemyArchetypeId, EnemyArchetyp
 // hpMultiplier ya no se usará para el cálculo de HP general.
 export const RANK_DEFINITIONS: Record<EnemyRank, RankDefinition> = {
   [EnemyRank.Minion]: {
-    hpMultiplier: 1.0, // Obsoleto para HP
+    // hpMultiplier: 1.0, // Obsoleto para HP
     furyActivationThresholdMultiplier: 1.0,
     fixedFurySlots: 0,
     hasDomainAbility: false,
   },
   [EnemyRank.Elite]: { 
-    hpMultiplier: 1.8, // Obsoleto para HP
+    // hpMultiplier: 1.8, // Obsoleto para HP
     furyActivationThresholdMultiplier: 0.9, 
     fixedFurySlots: 1, 
     hasDomainAbility: false,
   },
   [EnemyRank.Boss]: { 
-    hpMultiplier: 3.0, // Obsoleto para HP
+    // hpMultiplier: 3.0, // Obsoleto para HP
     furyActivationThresholdMultiplier: 0.8, 
     fixedFurySlots: 1, 
     hasDomainAbility: true, 
