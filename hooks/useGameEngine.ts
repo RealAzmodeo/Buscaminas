@@ -6,7 +6,7 @@ import {
   MarkType, Rarity, RunStats, GameEvent, FloatingTextEventPayload, DeactivatedEchoInfo, MetaProgressState,
   EcoTreeNodeData, GoalProgress, GoalDefinition, GoalCellRevealedPayload, GoalEnemyDefeatedPayload, GoalLevelCompletedPayload,
   BoardConfig, GuidingTextKey, RunMapState, RunMapNode, BiomeId, MapRewardType, MapEncounterType,
-  EnemyInstance, BoardParameters, EnemyRank, EnemyArchetypeId, AICellInfo, CellPosition
+  EnemyInstance, BoardParameters, EnemyRank, EnemyArchetypeId, AICellInfo, CellPosition, MirrorUpgradeId
 } from '../types';
 import {
   BOARD_ROWS as DEFAULT_BOARD_ROWS, BOARD_COLS as DEFAULT_BOARD_COLS,
@@ -28,11 +28,12 @@ import {
   PROLOGUE_SHADOW_EMBER_FURY_ABILITY,
   PROLOGUE_BOARD_CONFIG,
   PROLOGUE_PREDEFINED_ECHO_CHOICES_BASE_IDS,
+  PROLOGUE_MESSAGES, // Added PROLOGUE_MESSAGES to import
   FURY_INCREMENT_PER_CLICK,
   ALL_FURY_ABILITIES_MAP
 } from '../constants';
 import { BIOME_DEFINITIONS } from '../constants/biomeConstants';
-import { MIRROR_UPGRADES_CONFIG, INITIAL_GOALS_CONFIG, GOAL_IDS, MIRROR_UPGRADE_IDS } from '../constants/metaProgressionConstants';
+import { MIRROR_UPGRADES_CONFIG, INITIAL_GOALS_CONFIG, GOAL_IDS } from '../constants/metaProgressionConstants'; // MIRROR_UPGRADE_IDS removed
 import { OBJECT_RATIO_DEFINITIONS, ENEMY_ARCHETYPE_DEFINITIONS, FLOOR_DEFINITIONS } from '../constants/difficultyConstants';
 import { generateEncounterForFloor } from '../services/encounterGenerator';
 import { createEnemyInstance } from '../services/enemyFactory';
@@ -40,23 +41,7 @@ import { playMidiSoundPlaceholder } from '../utils/soundUtils';
 import { GoalTrackingService } from '../services/goalTrackingService';
 import { AIPlayer } from '../core/ai/AIPlayer';
 
-export const PROLOGUE_MESSAGES: Record<number | string, string> = {
-  1: "Bienvenido a Numeria's Edge. Revela casillas para encontrar tu camino.",
-  2: "Los números son <strong>Pistas</strong>. Indican cuántos objetos (<strong>Ataque</strong> u Oro) hay en las casillas adyacentes.",
-  3: "¡Una casilla de <strong>Ataque</strong>! Si la revelas tú, dañas al enemigo. Si la revela el enemigo, te daña a ti.",
-  4: "¡<strong>Oro</strong>! Acumúlalo para adquirir Ecos poderosos entre niveles.",
-  5: "¡Cuidado, una casilla de <strong>Ataque</strong> revelada por el enemigo te daña!",
-  6: "La barra de <strong>Furia</strong> del enemigo aumenta con cada casilla. Este enemigo es débil; su Furia no se desatará.",
-  7: "Has derrotado a tu primer enemigo. El Abismo responde con un Eco... Elige sabiamente.",
-  8: "Has elegido un <strong>Eco</strong>. Estos artefactos otorgan poderes pasivos.",
-  9: "Antes de adentrarte más... el Abismo exige un augurio. El <strong>Oráculo de la Agonía</strong> revelará la forma de la Furia que te espera en el próximo nivel.",
-  10: "Contempla los rostros del tormento que aguarda. Memoriza sus efectos.",
-  11: "El caos arremolina el futuro... Las cartas se mezclan.",
-  12: "Sella el pacto. ¿Qué sombra invocarás para el Nivel 1?",
-  13: "Así está escrito. Esta Furia te esperará en el Nivel 1. Prepárate.",
-  'BATTLEFIELD_REDUCTION_START': "¡No quedan más casillas de Ataque seguras! ¡El Abismo exige una conclusión!",
-  'BATTLEFIELD_REDUCTION_COMPLETE': "El campo de batalla se encoge... ¡prepárate!",
-};
+// PROLOGUE_MESSAGES definition removed from here
 
 const PLAYER_ACTION_RESOLVE_DELAY_MS = 300;
 const ENEMY_THINKING_MIN_DURATION_MS = 1500;
@@ -354,11 +339,15 @@ export const useGameEngine = () => {
 
 
   useEffect(() => {
-    if (player.hp <= 0 && gameState.status === GameStatus.Playing) {
+    if (player.hp <= 0 &&
+        gameState.status === GameStatus.Playing &&
+        gameState.currentPhase !== GamePhase.PRE_DEFEAT_SEQUENCE &&
+        gameState.currentPhase !== GamePhase.PRE_VICTORY_SEQUENCE // Ensure not already in a terminal sequence
+        ) {
       playMidiSoundPlaceholder('player_defeat');
-      setGameStatus(GameStatus.GameOverDefeat);
+      setGamePhase(GamePhase.PRE_DEFEAT_SEQUENCE);
     }
-  }, [player.hp, gameState.status, setGameStatus]);
+  }, [player.hp, gameState.status, gameState.currentPhase, setGamePhase]); // setGameStatus removed, setGamePhase added
 
 
   const confirmAndAbandonRun = useCallback(() => {
@@ -827,7 +816,8 @@ export const useGameEngine = () => {
       setRunStats({ ...initialRunStats, swordUsedThisLevel: false, swordUsedThisLevelForMirror: false, runUniqueEcosActivated: [], runUniqueFuriesExperienced: [], newlyCompletedGoalIdsThisRun: [] });
 
       let baseHp = INITIAL_PLAYER_HP, baseGold = INITIAL_PLAYER_GOLD, baseShield = INITIAL_PLAYER_SHIELD, currentMaxSoulFragments = INITIAL_MAX_SOUL_FRAGMENTS;
-      for (const upgradeId in metaProgress.mirrorUpgrades) {
+      for (const upgradeIdString in metaProgress.mirrorUpgrades) {
+          const upgradeId = upgradeIdString as MirrorUpgradeId; // Cast to enum type
           const currentMirrorLevel = metaProgress.mirrorUpgrades[upgradeId];
           if (currentMirrorLevel > 0) {
               const upgradeDef = MIRROR_UPGRADES_CONFIG.find(u => u.id === upgradeId);
@@ -918,7 +908,8 @@ export const useGameEngine = () => {
     setRunStats({ ...initialRunStats, swordUsedThisLevel: false, swordUsedThisLevelForMirror: false, runUniqueEcosActivated: [], runUniqueFuriesExperienced: [], newlyCompletedGoalIdsThisRun: [] });
 
     let baseHp = INITIAL_PLAYER_HP, baseGold = INITIAL_PLAYER_GOLD, baseShield = INITIAL_PLAYER_SHIELD, currentMaxSoulFragments = INITIAL_MAX_SOUL_FRAGMENTS;
-    for (const upgradeId in metaProgress.mirrorUpgrades) {
+    for (const upgradeIdString in metaProgress.mirrorUpgrades) {
+        const upgradeId = upgradeIdString as MirrorUpgradeId; // Cast to enum type
         const currentMirrorLevel = metaProgress.mirrorUpgrades[upgradeId];
         if (currentMirrorLevel > 0) {
             const upgradeDef = MIRROR_UPGRADES_CONFIG.find(u => u.id === upgradeId);
@@ -1220,13 +1211,13 @@ export const useGameEngine = () => {
       setAvailableEchoChoices(generateEchoChoicesForPostLevelScreen(gameState.currentLevel, activeEcos, newPlayerState, metaProgress));
       let mapDecisionNowPending = false;
       if (!gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch -1 ) mapDecisionNowPending = true;
+      // Enemy defeated in enemy's turn (e.g. by trap)
       setGameState(prev => ({
         ...prev,
-        status: GameStatus.PostLevel,
-        mapDecisionPending: mapDecisionNowPending,
-        furyMinigameCompletedForThisLevel: false, // Reset for next level's Fury Oracle
-        postLevelActionTaken: false, // Reset for Echo choice
-        // currentPhase will be handled by ENEMY_ACTION_RESOLVING -> PLAYER_TURN transition
+        currentPhase: GamePhase.PRE_VICTORY_SEQUENCE, // Set the new phase
+        mapDecisionNowPending: mapDecisionNowPending,
+        furyMinigameCompletedForThisLevel: false,
+        postLevelActionTaken: false,
       }));
     }
   }, [board, player, enemy, activeEcos, addGameEvent, setGameStatus, recalculateAllClues, updateBoardVisualEffects, metaProgress, setAndSaveMetaProgress, generateEchoChoicesForPostLevelScreen, gameState.currentLevel, gameState.isPrologueActive, gameState.currentStretchCompletedLevels, gameState.levelsInCurrentStretch, runStats, advancePrologueStep]);
@@ -1297,9 +1288,11 @@ export const useGameEngine = () => {
                 if (newPlayerState.consecutiveSwordsRevealed >= maestriaConfig.count) { actualAttackDamage += (maestriaConfig.bonus * (maestriaEcho.effectivenessMultiplier || 1)); triggerConditionalEchoAnimation(maestriaEcho.id); }
             }
             if (newPlayerState.criticalHitClicksRemaining > 0) { actualAttackDamage *= 2; addGameEvent({ text: '¡Crítico!', type: 'info', targetId: 'enemy-stats-container' }); }
-            const golpeCerteroUpgrade = MIRROR_UPGRADES_CONFIG.find(u => u.id === MIRROR_UPGRADE_IDS.GOLPE_CERTERO_INICIAL);
-            if (golpeCerteroUpgrade && metaProgress.mirrorUpgrades[MIRROR_UPGRADE_IDS.GOLPE_CERTERO_INICIAL] > 0 && !newRunStats.swordUsedThisLevelForMirror) { // swordUsedThisLevelForMirror for Mirror compatibility
-                let totalBonus = 0; for(let i=0; i < metaProgress.mirrorUpgrades[MIRROR_UPGRADE_IDS.GOLPE_CERTERO_INICIAL]; i++) { totalBonus += golpeCerteroUpgrade.levels[i].effectValue; }
+            const golpeCerteroUpgrade = MIRROR_UPGRADES_CONFIG.find(u => u.id === MirrorUpgradeId.GolpeCerteroInicial);
+            if (golpeCerteroUpgrade && metaProgress.mirrorUpgrades[MirrorUpgradeId.GolpeCerteroInicial] > 0 && !newRunStats.swordUsedThisLevelForMirror) {
+                let totalBonus = 0;
+                const currentGolpeCerteroLevel = metaProgress.mirrorUpgrades[MirrorUpgradeId.GolpeCerteroInicial];
+                for(let i=0; i < currentGolpeCerteroLevel; i++) { totalBonus += golpeCerteroUpgrade.levels[i].effectValue; }
                 actualAttackDamage += totalBonus; newRunStats.swordUsedThisLevelForMirror = true; addGameEvent({ text: `¡Golpe Certero Inicial! (+${totalBonus})`, type: 'info', targetId: 'enemy-stats-container' });
             }
             let damageToArmor = 0, damageToHp = actualAttackDamage;
@@ -1382,13 +1375,16 @@ export const useGameEngine = () => {
       setAvailableEchoChoices(generateEchoChoicesForPostLevelScreen(gameState.currentLevel, activeEcos, newPlayerState, metaProgress));
       let mapDecisionNowPending = false;
       if (!gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch -1 ) mapDecisionNowPending = true;
+
+      // Enemy defeated in player's turn
+      setGamePhase(GamePhase.PRE_VICTORY_SEQUENCE);
       setGameState(prev => ({
         ...prev,
-        status: GameStatus.PostLevel,
-        mapDecisionPending: mapDecisionNowPending,
-        furyMinigameCompletedForThisLevel: false, // Reset for next level's Fury Oracle
-        postLevelActionTaken: false, // Reset for Echo choice
-        currentPhase: GamePhase.PLAYER_ACTION_RESOLVING, // Player action is resolving
+        // currentPhase is set by setGamePhase above.
+        // status: GameStatus.PostLevel, // This will be handled by PRE_VICTORY_SEQUENCE resolution
+        mapDecisionNowPending: mapDecisionNowPending,
+        furyMinigameCompletedForThisLevel: false,
+        postLevelActionTaken: false,
       }));
       return;
     } else if (gameState.status === GameStatus.Playing && checkAllPlayerBeneficialAttacksRevealed()) {

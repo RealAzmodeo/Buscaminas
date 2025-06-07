@@ -1,22 +1,23 @@
 
-import { MirrorUpgradeDefinition, GoalDefinition, CellType } from '../types';
+import { MirrorUpgradeDefinition, GoalDefinition, CellType, MirrorUpgradeId } from '../types';
 import { INITIAL_MAX_SOUL_FRAGMENTS as IMSF } from '../constants'; // Import with an alias or directly
 
-export const INITIAL_MAX_SOUL_FRAGMENTS = IMSF; // Re-export
+// export const INITIAL_MAX_SOUL_FRAGMENTS = IMSF; // Re-export removed
 
-export const MIRROR_UPGRADE_IDS = {
-  VIGOR_PRIMORDIAL: 'vigorPrimordial',
-  GOLPE_CERTERO_INICIAL: 'golpeCerteroInicial',
-  FORTUNA_ERRANTE: 'fortunaErrante',
-  RESGUARDO_EFIMERO: 'resguardoEfimero',
-  AFINIDAD_ALMICA: 'afinidadAlmica',
-};
+// MIRROR_UPGRADE_IDS object removed, replaced by MirrorUpgradeId enum
+// export const MIRROR_UPGRADE_IDS = {
+//   VIGOR_PRIMORDIAL: 'vigorPrimordial',
+//   GOLPE_CERTERO_INICIAL: 'golpeCerteroInicial',
+//   FORTUNA_ERRANTE: 'fortunaErrante',
+//   RESGUARDO_EFIMERO: 'resguardoEfimero',
+//   AFINIDAD_ALMICA: 'afinidadAlmica',
+// };
 
 export const CONFIRMATION_THRESHOLD_LUMENS = 75; // Lumens cost above which a confirmation modal will appear for Mirror upgrades
 
 export const MIRROR_UPGRADES_CONFIG: MirrorUpgradeDefinition[] = [
   {
-    id: MIRROR_UPGRADE_IDS.VIGOR_PRIMORDIAL,
+    id: MirrorUpgradeId.VigorPrimordial,
     name: "Vigor Primordial",
     icon: "❤️‍🔥",
     maxLevel: 3,
@@ -29,7 +30,7 @@ export const MIRROR_UPGRADES_CONFIG: MirrorUpgradeDefinition[] = [
     ],
   },
   {
-    id: MIRROR_UPGRADE_IDS.GOLPE_CERTERO_INICIAL,
+    id: MirrorUpgradeId.GolpeCerteroInicial,
     name: "Golpe Certero Inicial",
     icon: "🗡️✨",
     maxLevel: 3,
@@ -42,7 +43,7 @@ export const MIRROR_UPGRADES_CONFIG: MirrorUpgradeDefinition[] = [
     ],
   },
   {
-    id: MIRROR_UPGRADE_IDS.FORTUNA_ERRANTE,
+    id: MirrorUpgradeId.FortunaErrante,
     name: "Fortuna del Errante",
     icon: "💰🍀",
     maxLevel: 3,
@@ -55,7 +56,7 @@ export const MIRROR_UPGRADES_CONFIG: MirrorUpgradeDefinition[] = [
     ],
   },
   {
-    id: MIRROR_UPGRADE_IDS.RESGUARDO_EFIMERO,
+    id: MirrorUpgradeId.ResguardoEfimero,
     name: "Resguardo Efímero",
     icon: "🛡️💫",
     maxLevel: 3,
@@ -68,16 +69,16 @@ export const MIRROR_UPGRADES_CONFIG: MirrorUpgradeDefinition[] = [
     ],
   },
   {
-    id: MIRROR_UPGRADE_IDS.AFINIDAD_ALMICA,
+    id: MirrorUpgradeId.AfinidadAlmica,
     name: "Afinidad Álmica",
     icon: "🔮✨",
     maxLevel: 3,
-    descriptionTemplate: (value) => `Tu cap. máx. de Fragmentos de Alma aumenta en +${value}. Base: ${INITIAL_MAX_SOUL_FRAGMENTS}.`,
+    descriptionTemplate: (value) => `Tu cap. máx. de Fragmentos de Alma aumenta en +${value}. Base: ${IMSF}.`,
     appliesTo: 'playerMaxSoulFragments',
     levels: [
-      { level: 1, cost: 100, effectValue: 20, description: `Aumenta cap. Fragmentos en +20 (Total: ${INITIAL_MAX_SOUL_FRAGMENTS + 20})` },
-      { level: 2, cost: 150, effectValue: 50, description: `Aumenta cap. Fragmentos en +50 adicional (Total: ${INITIAL_MAX_SOUL_FRAGMENTS + 20 + 50})` },
-      { level: 3, cost: 250, effectValue: 100, description: `Aumenta cap. Fragmentos en +100 adicional (Total: ${INITIAL_MAX_SOUL_FRAGMENTS + 20 + 50 + 100})` },
+      { level: 1, cost: 100, effectValue: 20, description: `Aumenta cap. Fragmentos en +20 (Total: ${IMSF + 20})` },
+      { level: 2, cost: 150, effectValue: 50, description: `Aumenta cap. Fragmentos en +50 adicional (Total: ${IMSF + 20 + 50})` },
+      { level: 3, cost: 250, effectValue: 100, description: `Aumenta cap. Fragmentos en +100 adicional (Total: ${IMSF + 20 + 50 + 100})` },
     ],
   },
 ];

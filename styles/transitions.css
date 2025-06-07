@@ -1,0 +1,136 @@
+/* === Transitions and Animations for Game Sequences === */
+
+/* --- Keyframes --- */
+
+@keyframes redFlash {
+  0% { background-color: rgba(200, 0, 0, 0.6); opacity: 1; } /* Slightly less intense red */
+  100% { background-color: rgba(200, 0, 0, 0); opacity: 0; }
+}
+
+@keyframes blueFlash {
+  0% { background-color: rgba(135, 206, 250, 0.6); opacity: 1; } /* Softer Light Sky Blue */
+  100% { background-color: rgba(135, 206, 250, 0); opacity: 0; }
+}
+
+@keyframes vignetteClose {
+  0% { box-shadow: inset 0 0 0vw 0vw rgba(0, 0, 0, 0); }
+  100% { box-shadow: inset 0 0 15vw 5vw rgba(0, 0, 0, 0.75); } /* Darker, larger vignette */
+}
+
+@keyframes fadeInText {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleInText {
+  0% { opacity: 0; transform: scale(0.85) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* --- Base Styles for Sequence Text --- */
+.epitaph-text,
+.victory-text {
+  position: absolute;
+  top: 40%; /* Positioned slightly higher than pure center */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 2000; /* Ensure text is above overlays */
+  opacity: 0;
+  pointer-events: none;
+  width: 80%; /* Prevent text from being too wide on large screens */
+  max-width: 600px;
+}
+
+.epitaph-text {
+  font-family: 'Cinzel', serif; /* Example of an elegant, somber font (ensure it's imported or available) */
+  color: #B91C1C; /* Tailwind red-700, for a deep, somber red */
+  font-size: 2.8rem; /* Responsive font size can be added via @media queries */
+  font-weight: 700;
+  line-height: 1.3;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.5), 0 0 3px rgba(255,100,100,0.3);
+  animation: fadeInText 1.5s ease-out 2s forwards; /* Delay 2s, slightly longer fade */
+}
+
+.victory-text {
+  font-family: 'Cinzel Decorative', cursive; /* Example of a heroic font (ensure imported) */
+  color: #F59E0B; /* Tailwind amber-500, for a golden/heroic feel */
+  font-size: 3.2rem; /* Larger for victory */
+  font-weight: bold;
+  line-height: 1.4;
+  text-shadow: 0 0 4px #fff, 0 0 8px #fff, 0 0 12px #F59E0B, 0 0 16px #F59E0B;
+  animation: scaleInText 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s forwards; /* Delay 1.5s */
+}
+
+/* --- Game Container Base for Pseudo-elements --- */
+/* Ensure the game container can host the ::before pseudo-element correctly */
+/* This might need to be applied to the specific div in GameScreen.tsx via its actual class or a ref if it's not the body */
+/* For now, assuming a class like .game-screen-container or similar is on the main game view wrapper */
+.game-screen-container-class-placeholder { /* Replace with actual class or use ref in component */
+    position: relative; /* Needed for ::before to position correctly */
+}
+
+
+/* --- Pre-Defeat Sequence --- */
+.game-container--pre-defeat::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 100%;
+  z-index: 1000;
+  pointer-events: none;
+  animation: redFlash 0.5s ease-out forwards;
+  /* Ensures this overlay is specific to this container if multiple such containers exist */
+  isolation: isolate;
+}
+
+.game-container--pre-defeat {
+  animation: vignetteClose 2s ease-in-out 0.5s forwards;
+  filter: grayscale(1);
+  transition: filter 2s ease-in-out 0.5s;
+}
+
+/*
+  Attempt at slow-motion for .game-container--pre-defeat:
+  This is highly experimental with pure CSS and has major caveats.
+  - It affects ALL animations on ALL children.
+  - `!important` can cause specificity wars.
+  - Performance can be an issue.
+  - JavaScript is generally better for fine-grained animation control.
+
+  Example (use with caution, preferably target specific classes):
+  .game-container--pre-defeat * {
+    animation-play-state: paused !important;
+  }
+  OR
+  .game-container--pre-defeat .some-specific-animated-element-class {
+    animation-duration: 4s !important;
+    animation-iteration-count: 1 !important; // If it's a looping animation
+  }
+*/
+
+
+/* --- Pre-Victory Sequence --- */
+.game-container--pre-victory::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 100%;
+  z-index: 1000;
+  pointer-events: none;
+  animation: blueFlash 0.5s ease-out forwards;
+  isolation: isolate;
+}
+
+.game-container--pre-victory {
+  filter: saturate(1.5); /* Target: 1.15, but make it slightly more noticeable */
+  transition: filter 1.5s ease-in-out 0.5s;
+}
+
+/*
+  Attempt at slow-motion for .game-container--pre-victory:
+  Similar caveats as the defeat sequence.
+  .game-container--pre-victory * {
+    animation-play-state: paused !important;
+  }
+*/
