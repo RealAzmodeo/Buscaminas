@@ -868,6 +868,10 @@ export enum GamePhase {
   ENEMY_ACTION_PENDING_REVEAL = 'ENEMY_ACTION_PENDING_REVEAL',
   /** AI's action is being processed (animations, effects, Fury application). */
   ENEMY_ACTION_RESOLVING = 'ENEMY_ACTION_RESOLVING',
+  /** Player has been defeated, playing out any final effects or animations. */
+  PRE_DEFEAT_SEQUENCE = 'PRE_DEFEAT_SEQUENCE',
+  /** Player has won, playing out any final effects or animations. */
+  PRE_VICTORY_SEQUENCE = 'PRE_VICTORY_SEQUENCE',
 }
 
 /**

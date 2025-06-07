@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { useGameEngine } from '../hooks/useGameEngine';
-import { PROLOGUE_MESSAGES } from '../constants'; // Import PROLOGUE_MESSAGES from constants
+import { PROLOGUE_MESSAGES } from '../constants';
+import { playMidiSoundPlaceholder } from '../utils/soundUtils'; // Import sound utility
 import HeaderUI from '../components/ui/HeaderUI';
 import Board from '../components/board/Board';
 import GuidingText from '../components/ui/ftue/GuidingText'; // Changed from { GuidingText }
@@ -15,12 +16,13 @@ interface GameScreenProps {
   onDebugLoseLevel: () => void;
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ 
+// ForwardRefRenderFunction allows GameScreen to receive a ref
+const GameScreen = React.forwardRef<HTMLDivElement, GameScreenProps>(({
   gameEngine, 
   onOpenConfirmAbandonModal, 
   onDebugWinLevel, 
   onDebugLoseLevel 
-}) => {
+}, ref) => { // Added ref here
   const { 
     gameState, 
     player, 
@@ -35,11 +37,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
   const boardKey = `${gameState.currentLevel}-${gameState.currentArenaLevel}-${gameState.currentBoardDimensions.rows}x${gameState.currentBoardDimensions.cols}-${gameState.currentBiomeId}-${gameState.currentPhase}`; // Added phase to key
 
-  const currentBiomeTheme = BIOME_DEFINITIONS[gameState.currentBiomeId] || BIOME_DEFINITIONS[BiomeId.Default];
-
+  // currentBiomeTheme is not directly used for styling the root div, so it can remain as is.
+  // const currentBiomeTheme = BIOME_DEFINITIONS[gameState.currentBiomeId] || BIOME_DEFINITIONS[BiomeId.Default];
 
   return (
-    <div className={`flex flex-col items-center w-full transition-all duration-500 ease-in-out ${gameState.isBattlefieldReductionTransitioning ? 'animate-battlefield-shake' : ''}`}>
+    <div ref={ref} className={`flex flex-col items-center w-full transition-all duration-500 ease-in-out ${gameState.isBattlefieldReductionTransitioning ? 'animate-battlefield-shake' : ''}`}>
       <HeaderUI 
         player={player} 
         enemy={enemy} 
@@ -93,7 +95,65 @@ const GameScreenWithOverlay: React.FC<GameScreenWithOverlayProps> = ({
   onDebugWinLevel,
   onDebugLoseLevel
 }) => {
-  const { gameState, advancePrologueStep, triggerBattlefieldReduction } = gameEngine; 
+  const { gameState, advancePrologueStep, triggerBattlefieldReduction, setGameStatus } = gameEngine;
+  const gameContainerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = gameContainerRef.current;
+    if (!container) return;
+
+    let primaryTimeoutId: number | undefined;
+    let secondarySoundTimeoutId: number | undefined;
+
+    if (gameState.currentPhase === GamePhase.PRE_DEFEAT_SEQUENCE) {
+      container.classList.add('game-container--pre-defeat');
+      container.classList.remove('game-container--pre-victory');
+
+      playMidiSoundPlaceholder('transition_defeat_impact');
+      playMidiSoundPlaceholder('audio_ambience_stop');
+
+      secondarySoundTimeoutId = window.setTimeout(() => {
+        playMidiSoundPlaceholder('transition_defeat_heartbeat_slow');
+      }, 1000); // Approx. 1s delay for heartbeat
+
+      primaryTimeoutId = window.setTimeout(() => {
+        setGameStatus(GameStatus.GameOverDefeat);
+      }, 4000);
+    } else if (gameState.currentPhase === GamePhase.PRE_VICTORY_SEQUENCE) {
+      container.classList.add('game-container--pre-victory');
+      container.classList.remove('game-container--pre-defeat');
+
+      playMidiSoundPlaceholder('transition_victory_final_hit');
+      playMidiSoundPlaceholder('transition_victory_shatter_dissipate');
+
+      secondarySoundTimeoutId = window.setTimeout(() => {
+        playMidiSoundPlaceholder('transition_victory_resolution_note');
+      }, 1000); // Approx. 1s delay
+
+      primaryTimeoutId = window.setTimeout(() => {
+        if (gameState.mapDecisionPending) {
+          setGameStatus(GameStatus.AbyssMapView);
+        } else {
+          setGameStatus(GameStatus.PostLevel);
+        }
+      }, 3000);
+    } else {
+      // Optional: Clean up classes if phase is neither (e.g., when a new level starts)
+      // This might not be necessary if the classes don't persist visually or are overridden.
+      container.classList.remove('game-container--pre-defeat', 'game-container--pre-victory');
+    }
+
+    return () => {
+      if (primaryTimeoutId) {
+        clearTimeout(primaryTimeoutId);
+      }
+      if (secondarySoundTimeoutId) {
+        clearTimeout(secondarySoundTimeoutId);
+      }
+      // Consider removing classes on cleanup if the phase changes away from these sequences abruptly
+      // container.classList.remove('game-container--pre-defeat', 'game-container--pre-victory');
+    };
+  }, [gameState.currentPhase, gameState.mapDecisionPending, setGameStatus]); // playMidiSoundPlaceholder is stable, not needed in deps
   
   const showContinueButtonForPrologueStep1 = gameState.isPrologueActive && 
                                          gameState.prologueStep === 1 && 
@@ -101,10 +161,10 @@ const GameScreenWithOverlay: React.FC<GameScreenWithOverlayProps> = ({
   
   const currentMessage = PROLOGUE_MESSAGES[gameState.guidingTextKey] || (PROLOGUE_MESSAGES[gameState.prologueStep] && gameState.isPrologueActive ? PROLOGUE_MESSAGES[gameState.prologueStep] : null);
 
-
   return (
     <>
       <GameScreen 
+        ref={gameContainerRef} // Pass the ref to GameScreen
         gameEngine={gameEngine} 
         onOpenConfirmAbandonModal={onOpenConfirmAbandonModal}
         onDebugWinLevel={onDebugWinLevel}

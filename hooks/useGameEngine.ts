@@ -339,11 +339,15 @@ export const useGameEngine = () => {
 
 
   useEffect(() => {
-    if (player.hp <= 0 && gameState.status === GameStatus.Playing) {
+    if (player.hp <= 0 &&
+        gameState.status === GameStatus.Playing &&
+        gameState.currentPhase !== GamePhase.PRE_DEFEAT_SEQUENCE &&
+        gameState.currentPhase !== GamePhase.PRE_VICTORY_SEQUENCE // Ensure not already in a terminal sequence
+        ) {
       playMidiSoundPlaceholder('player_defeat');
-      setGameStatus(GameStatus.GameOverDefeat);
+      setGamePhase(GamePhase.PRE_DEFEAT_SEQUENCE);
     }
-  }, [player.hp, gameState.status, setGameStatus]);
+  }, [player.hp, gameState.status, gameState.currentPhase, setGamePhase]); // setGameStatus removed, setGamePhase added
 
 
   const confirmAndAbandonRun = useCallback(() => {
@@ -1207,13 +1211,13 @@ export const useGameEngine = () => {
       setAvailableEchoChoices(generateEchoChoicesForPostLevelScreen(gameState.currentLevel, activeEcos, newPlayerState, metaProgress));
       let mapDecisionNowPending = false;
       if (!gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch -1 ) mapDecisionNowPending = true;
+      // Enemy defeated in enemy's turn (e.g. by trap)
       setGameState(prev => ({
         ...prev,
-        status: GameStatus.PostLevel,
-        mapDecisionPending: mapDecisionNowPending,
-        furyMinigameCompletedForThisLevel: false, // Reset for next level's Fury Oracle
-        postLevelActionTaken: false, // Reset for Echo choice
-        // currentPhase will be handled by ENEMY_ACTION_RESOLVING -> PLAYER_TURN transition
+        currentPhase: GamePhase.PRE_VICTORY_SEQUENCE, // Set the new phase
+        mapDecisionNowPending: mapDecisionNowPending,
+        furyMinigameCompletedForThisLevel: false,
+        postLevelActionTaken: false,
       }));
     }
   }, [board, player, enemy, activeEcos, addGameEvent, setGameStatus, recalculateAllClues, updateBoardVisualEffects, metaProgress, setAndSaveMetaProgress, generateEchoChoicesForPostLevelScreen, gameState.currentLevel, gameState.isPrologueActive, gameState.currentStretchCompletedLevels, gameState.levelsInCurrentStretch, runStats, advancePrologueStep]);
@@ -1371,13 +1375,16 @@ export const useGameEngine = () => {
       setAvailableEchoChoices(generateEchoChoicesForPostLevelScreen(gameState.currentLevel, activeEcos, newPlayerState, metaProgress));
       let mapDecisionNowPending = false;
       if (!gameState.isPrologueActive && gameState.currentStretchCompletedLevels >= gameState.levelsInCurrentStretch -1 ) mapDecisionNowPending = true;
+
+      // Enemy defeated in player's turn
+      setGamePhase(GamePhase.PRE_VICTORY_SEQUENCE);
       setGameState(prev => ({
         ...prev,
-        status: GameStatus.PostLevel,
-        mapDecisionPending: mapDecisionNowPending,
-        furyMinigameCompletedForThisLevel: false, // Reset for next level's Fury Oracle
-        postLevelActionTaken: false, // Reset for Echo choice
-        currentPhase: GamePhase.PLAYER_ACTION_RESOLVING, // Player action is resolving
+        // currentPhase is set by setGamePhase above.
+        // status: GameStatus.PostLevel, // This will be handled by PRE_VICTORY_SEQUENCE resolution
+        mapDecisionNowPending: mapDecisionNowPending,
+        furyMinigameCompletedForThisLevel: false,
+        postLevelActionTaken: false,
       }));
       return;
     } else if (gameState.status === GameStatus.Playing && checkAllPlayerBeneficialAttacksRevealed()) {
