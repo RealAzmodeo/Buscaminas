@@ -1,0 +1,658 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Numeria's Edge - Tactical Roguelike</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* General Body Styling */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden; /* Prevent body scroll if floating text is slightly off screen */
+    }
+    /* Custom Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e293b; /* slate-800 */
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155; /* slate-700 */
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569; /* slate-600 */
+    }
+
+    /* Floating Animation (e.g., for Echo cards) */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    /* Echo Selection Animation */
+    @keyframes select-echo {
+      0% { 
+        transform: scale(1.05); 
+        opacity: 1; 
+        box-shadow: 0 0 25px 10px var(--tw-shadow-color, #0ea5e9); /* Using Tailwind's sky-500 for glow */
+      }
+      100% { 
+        transform: scale(0.8); 
+        opacity: 0; 
+        box-shadow: 0 0 8px 3px var(--tw-shadow-color, #0ea5e9);
+      }
+    }
+    .animate-select-echo {
+      animation: select-echo 0.5s ease-out forwards;
+    }
+
+    /* Oracle Minigame Styles */
+    .oracle-game-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(15, 23, 42, 0.85); /* bg-slate-900 with more opacity */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50; /* Ensure it's above game screen but below other modals if any */
+      padding: 1rem;
+      backdrop-filter: blur(3px);
+    }
+
+    .oracle-card-container {
+      position: relative; 
+      margin-bottom: 2rem;
+      perspective: 1000px; 
+    }
+
+    .oracle-card {
+      width: 160px; 
+      height: 240px; 
+      border-radius: 0.75rem; 
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2), 0 4px 6px -2px rgba(0,0,0,0.1); 
+      transition: box-shadow 0.3s ease-in-out, opacity 0.5s ease-in-out, transform 0.6s ease-in-out;
+      transform-style: preserve-3d; 
+      cursor: default; 
+      position: absolute; 
+      opacity: 0; /* Initially hidden, controlled by JS for staggered appearance */
+    }
+    
+    .oracle-card.is-appearing { 
+      animation: oracle-card-appear-effect 0.5s ease-out; 
+    }
+
+    @keyframes oracle-card-appear-effect {
+        from { opacity: 0; transform: translateY(20px) scale(0.95) rotateY(0deg); } 
+        to { opacity: 1; transform: translateY(0px) scale(1) rotateY(0deg); }
+    }
+    
+    .oracle-card.is-selectable:hover {
+      transform: translateY(-8px) scale(1.07) rotateY(-180deg); /* Flip on hover */
+      cursor: pointer;
+      z-index: 10; /* Bring to front on hover */
+    }
+    /* Rarity-specific hover shadows for Oracle Cards */
+    .oracle-card.is-selectable.border-slate-500:hover { box-shadow: 0 0 20px 7px rgba(100, 116, 139, 0.4); } 
+    .oracle-card.is-selectable.border-sky-500:hover { box-shadow: 0 0 25px 8px rgba(14, 165, 233, 0.4); } 
+    .oracle-card.is-selectable.border-purple-500:hover { box-shadow: 0 0 25px 8px rgba(168, 85, 247, 0.4); } 
+    .oracle-card.is-selectable.border-amber-500:hover { box-shadow: 0 0 25px 8px rgba(245, 158, 11, 0.5); } 
+
+
+    .oracle-card.is-selected-animation { 
+      animation: oracle-card-select-pop 0.3s ease-out;
+    }
+    
+    @keyframes oracle-card-select-pop { /* Animation for when a card is picked */
+        0% { transform: scale(1.07) rotateY(-180deg); } 
+        50% { transform: scale(1.18) rotateY(-180deg); box-shadow: 0 0 30px 10px var(--tw-shadow-color, rgba(14, 165, 233, 0.5)); }
+        100% { transform: scale(1.07) rotateY(-180deg); }
+    }
+
+    .oracle-card-face { /* Common styling for front and back faces of the card */
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden; /* Hides the back of the face during flip */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem; 
+      border-radius: 0.6rem; /* Slightly smaller radius for inner faces */
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .oracle-card-front { /* Front face showing ability details */
+      color: #e2e8f0; /* slate-200 */
+      transform: rotateY(0deg); 
+    }
+
+    .oracle-card-back { /* Back face showing '?' */
+      background: linear-gradient(145deg, #475569, #334155); /* slate-600 to slate-700 */
+      border: 1px solid #64748b; /* slate-500 */
+      transform: rotateY(180deg); 
+      font-size: 3rem; 
+      color: #1e293b; /* slate-800 for the '?' */
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .oracle-card-back-content { /* Styling for the '?' on the back */
+        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    
+    .oracle-game-prompt { /* Styling for the text prompt in Oracle Minigame */
+        min-height: 60px; /* Ensure space even if text is short */
+        text-shadow: 0 0 10px rgba(14, 165, 233, 0.5); /* sky-500 glow */
+    }
+
+    /* Timer Bar for Oracle Minigame card reveal phase */
+    .oracle-reveal-timer-bar-container {
+      width: 100%;
+      max-width: 520px; /* Match card container width approximation */
+      height: 8px;
+      background-color: #334155; /* slate-700 */
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      border: 1px solid #475569; /* slate-600 */
+    }
+
+    .oracle-reveal-timer-bar {
+      height: 100%;
+      background-color: #0ea5e9; /* sky-500 */
+      border-radius: 4px;
+    }
+    
+    .oracle-reveal-timer-bar.is-depleting {
+      animation: deplete-timer 4s linear forwards; /* Animation set by JS to match REVEAL_DURATION_MS */
+    }
+
+    @keyframes deplete-timer {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+
+    /* FTUE (First Time User Experience) Guiding Text Styles */
+    .ftue-guiding-text-overlay {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 700px;
+      padding: 1rem 1.5rem;
+      background-color: rgba(15, 23, 42, 0.92); /* slate-900 more opaque */
+      color: #e2e8f0; /* slate-200 */
+      border: 1px solid #334155; /* slate-700 */
+      border-radius: 0.75rem; /* rounded-lg */
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 100; /* Above most game elements, but below critical modals */
+      text-align: center;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      opacity: 0; /* Initially hidden, fades in */
+      animation: ftue-text-appear 0.5s ease-out forwards;
+    }
+
+    @keyframes ftue-text-appear {
+      from { opacity: 0; transform: translate(-50%, 20px); } /* Start from below and faded */
+      to { opacity: 1; transform: translate(-50%, 0px); } /* End at position and fully visible */
+    }
+
+    .ftue-guiding-text-overlay strong { /* Styling for emphasized text in FTUE messages */
+      color: #7dd3fc; /* sky-300 */
+    }
+
+    /* Conditional Echo Activation Feedback (Glow Effect) */
+    @keyframes echo-glow {
+      0%, 100% {
+        box-shadow: 0 0 5px 2px rgba(56, 189, 248, 0); /* sky-400, transparent */
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 15px 7px rgba(56, 189, 248, 0.7); /* sky-400, prominent glow */
+        transform: scale(1.1);
+      }
+    }
+    .echo-activated-feedback {
+      animation: echo-glow 1.5s ease-in-out;
+    }
+    
+    /* Damage Flash Animations for Player and Enemy Stats UI */
+    @keyframes damage-flash-player {
+      0% { background-color: transparent; transform: scale(1); }
+      30% { background-color: rgba(239, 68, 68, 0.5); transform: scale(1.02); } /* red-500 */
+      100% { background-color: transparent; transform: scale(1); }
+    }
+    .animate-damage-flash-player {
+      animation: damage-flash-player 0.4s ease-out;
+    }
+
+    @keyframes damage-flash-enemy {
+      0% { background-color: transparent; transform: scale(1); }
+      30% { background-color: rgba(253, 224, 71, 0.5); transform: scale(1.02); } /* yellow-400 */
+      100% { background-color: transparent; transform: scale(1); }
+    }
+    .animate-damage-flash-enemy {
+      animation: damage-flash-enemy 0.4s ease-out;
+    }
+
+    /* HUD Icon Interactive Styles (for Echos, Fury Abilities) */
+    .hud-icon-interactive, .hud-icon-fury {
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, filter 0.2s ease-out; 
+      outline: none; /* Handled by focus-visible */
+      cursor: help; /* Indicates tooltip availability */
+    }
+    .hud-icon-interactive:hover, 
+    .hud-icon-interactive:focus-visible { /* Glow for Echo icons */
+      transform: scale(1.15);
+      box-shadow: 0 0 12px 5px rgba(56, 189, 248, 0.5); /* sky-400 glow */
+    }
+     .hud-icon-fury:hover,
+     .hud-icon-fury:focus-visible { /* Glow for Fury icons */
+      transform: scale(1.15);
+      box-shadow: 0 0 12px 5px rgba(220, 38, 38, 0.5); /* red-600 glow */
+    }
+    .grayscale { /* Utility for grayscale effect (e.g., used/deactivated Echos) */
+      filter: grayscale(100%);
+    }
+
+
+    /* Status Effect Icons in PlayerStats/EnemyStats */
+    .status-effects-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem; /* space-x-2 / space-y-2 equivalent */
+      margin-top: 0.5rem; /* mt-2 */
+      justify-content: center; /* Center on small screens */
+    }
+    @media (min-width: 768px) { /* md breakpoint */
+      .status-effects-container {
+        justify-content: flex-start; /* Align left on medium screens and up */
+      }
+    }
+    .status-effect-icon-wrapper { /* Wrapper for positioning tooltips relative to icons */
+        position: relative; 
+    }
+    .status-effect-icon {
+      display: flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem; /* px-2 py-1 */
+      background-color: rgba(71, 85, 105, 0.7); /* slate-500 with opacity */
+      border-radius: 0.375rem; /* rounded-md */
+      font-size: 0.75rem; /* text-xs */
+      line-height: 1rem; /* leading-tight */
+      color: #e2e8f0; /* slate-200 */
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .status-effect-icon .icon { /* Emoji/icon part */
+      font-size: 0.875rem; /* text-sm */
+      margin-right: 0.25rem; /* mr-1 */
+    }
+    .status-effect-icon .duration { /* Duration number */
+      font-weight: 600; /* semibold */
+      color: #cbd5e1; /* slate-300 */
+      margin-left: 0.25rem; /* ml-1 */
+    }
+    .status-effect-icon.buff { /* Styling for buffs */
+      background-color: rgba(34, 197, 94, 0.2); /* green-500 with opacity */
+      color: #a7f3d0; /* green-200 */
+      border: 1px solid rgba(34,197,94, 0.4); /* green-500 border */
+    }
+    .status-effect-icon.debuff { /* Styling for debuffs */
+      background-color: rgba(239, 68, 68, 0.2); /* red-500 with opacity */
+      color: #fecaca; /* red-200 */
+      border: 1px solid rgba(239,68,68, 0.4); /* red-500 border */
+    }
+
+    /* Cell Visual Effects (e.g., for Echoes indicating Attack/Gold types) */
+    @keyframes pulse-red-cell-effect { /* Example for dangerous Attack cells */
+      0%, 100% { box-shadow: inset 0 0 0px 0px rgba(239, 68, 68, 0.4); } /* red-500 */
+      50% { box-shadow: inset 0 0 8px 2px rgba(239, 68, 68, 0.6); } 
+    }
+    .animate-pulse-red { 
+      animation: pulse-red-cell-effect 1.7s infinite ease-in-out; 
+    }
+
+    @keyframes glow-blue-cell-effect { /* Example for beneficial Attack cells or other special items */
+      0%, 100% { box-shadow: inset 0 0 0px 0px rgba(59, 130, 246, 0.3); } /* blue-500 */
+      50% { box-shadow: inset 0 0 8px 2px rgba(59, 130, 246, 0.5); } 
+    }
+    .animate-glow-blue { 
+      animation: glow-blue-cell-effect 2s infinite ease-in-out; 
+    }
+
+
+    /* Floating Text Styles (Damage numbers, gold gains, etc.) */
+    @keyframes float-up-fade {
+      from {
+        transform: translateY(0) translateX(-50%); /* Initial position from JS, centered horizontally */
+        opacity: 1;
+      }
+      to {
+        transform: translateY(-60px) translateX(-50%); /* Move up and stay centered */
+        opacity: 0;
+      }
+    }
+
+    .floating-text-item {
+      position: absolute; /* Positioned by JS initially */
+      animation: float-up-fade 1.7s ease-out forwards;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 1.1rem; /* Slightly larger for impact */
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+      pointer-events: none; /* Does not interfere with clicks */
+      white-space: nowrap; /* Prevent text wrapping */
+      z-index: 1001; /* Above game board, below critical modals */
+      border: 1px solid rgba(0,0,0,0.2); /* Subtle border */
+    }
+
+    /* Color variations for floating text types */
+    .ft-damage-player {
+      color: white;
+      background-color: rgba(239, 68, 68, 0.85); /* red-500 */
+    }
+    .ft-damage-enemy {
+      color: white;
+      background-color: rgba(249, 115, 22, 0.85); /* orange-500 */
+    }
+    .ft-heal-player {
+      color: white;
+      background-color: rgba(34, 197, 94, 0.85); /* green-500 */
+    }
+    .ft-gold-player {
+      color: #422006; /* dark brown for text on gold background */
+      background-color: rgba(250, 204, 21, 0.9); /* yellow-400 */
+      border: 1px solid rgba(217, 119, 6, 0.5); /* amber-600 border */
+    }
+    .ft-info { 
+      color: white;
+      background-color: rgba(59, 130, 246, 0.85); /* blue-500 */
+    }
+    .ft-armor-gain {
+      color: white;
+      background-color: rgba(107, 114, 128, 0.85); /* slate-500 */
+    }
+    .ft-armor-break {
+      color: #e2e8f0; /* slate-200 */
+      background-color: rgba(71, 85, 105, 0.85); /* slate-600 */
+      font-style: italic;
+    }
+    
+    /* Paranoia Galopante Clue Flicker Animation */
+    @keyframes flicker-paranoia {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      25% { opacity: 0.6; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.05); }
+      75% { opacity: 0.4; transform: scale(0.9); }
+    }
+    .flicker-paranoia {
+      animation: flicker-paranoia 0.5s infinite steps(1, end); /* steps for abrupt changes */
+    }
+
+    /* Custom Tooltip Style */
+    .custom-tooltip {
+      position: absolute;
+      background-color: #1e293b; /* slate-800 */
+      color: #e2e8f0; /* slate-200 */
+      padding: 0.5rem 0.75rem; /* py-2 px-3 */
+      border-radius: 0.375rem; /* rounded-md */
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      z-index: 1050; /* Above most elements, including Oracle Game overlay if needed */
+      font-size: 0.875rem; /* text-sm */
+      line-height: 1.4;
+      max-width: 300px;
+      pointer-events: none; /* Tooltip itself shouldn't be interactive */
+      opacity: 0; /* Controlled by JS/CSS for appear/disappear */
+      transform: translateY(5px); /* Start slightly offset for animation */
+      transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+    }
+    .custom-tooltip.visible { /* Class added by JS when tooltip should be shown */
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .custom-tooltip strong { /* For emphasized text within tooltips */
+        color: #7dd3fc; /* sky-300 */
+    }
+    .custom-tooltip .tooltip-title { /* Styling for tooltip titles */
+        font-weight: bold;
+        color: #cbd5e1; /* slate-300 */
+        margin-bottom: 0.25rem; /* mb-1 */
+    }
+    .custom-tooltip .tooltip-description { /* Styling for main tooltip text */
+        color: #94a3b8; /* slate-400 */
+    }
+     .custom-tooltip .tooltip-details { /* Styling for secondary details (e.g., duration) */
+        font-size: 0.75rem; /* text-xs */
+        color: #64748b; /* slate-500 */
+        margin-top: 0.3rem; /* Roughly mt-1.5 */
+    }
+
+    /* Meta Progression Animations (Sanctuary, Mirror, Goals) */
+    @keyframes lumen-change-effect { /* For Will Lumen counter updates */
+      0% { transform: scale(1); color: #06b6d4; filter: brightness(1.0); } /* cyan-500 */
+      15% { transform: scale(0.85) rotate(3deg); color: #22d3ee; filter: brightness(0.85); } /* cyan-400, quick dip for "spend" */
+      30% { transform: scale(0.95); color: #67e8f9; } /* cyan-300 */
+      60% { transform: scale(1.25) rotate(-5deg); color: #a5f3fc; filter: brightness(1.6) drop-shadow(0 0 7px #a5f3fc); } /* cyan-200, gain/settle peak */
+      100% { transform: scale(1); color: #06b6d4; filter: brightness(1.0); } /* Return to normal */
+    }
+    .animate-lumen-change {
+      animation: lumen-change-effect 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes mirror-upgrade-item-effect { /* Glow effect for Mirror Upgrade items when purchased */
+      0% { box-shadow: 0 0 0px rgba(14, 165, 233, 0); transform: scale(1); } /* sky-500 */
+      50% { box-shadow: 0 0 20px 8px rgba(14, 165, 233, 0.5); transform: scale(1.03); }
+      100% { box-shadow: 0 0 0px rgba(14, 165, 233, 0); transform: scale(1); }
+    }
+    .animate-mirror-upgrade-item {
+      animation: mirror-upgrade-item-effect 1s ease-out;
+    }
+    
+    @keyframes ping-briefly { /* For Mirror Upgrade Item Icon pulse */
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+    .animate-ping-briefly {
+      animation: ping-briefly 0.5s ease-out;
+    }
+
+
+    @keyframes goal-claimed-enhanced-effect { /* Enhanced effect for GoalItem when claimed */
+      0% { transform: scale(1) rotate(0deg); opacity: 1; box-shadow: 0 0 0px rgba(251, 191, 36, 0); filter: brightness(1); } /* amber-400 */
+      20% { transform: scale(1.15) rotate(4deg); opacity: 0.95; box-shadow: 0 0 30px 12px rgba(52, 211, 153, 0.9); filter: brightness(1.7); } /* emerald-400, more intense */
+      40% { transform: scale(0.85) rotate(-4deg); opacity: 0.7; box-shadow: 0 0 20px 7px rgba(52, 211, 153, 0.6); filter: brightness(1.3); }
+      100% { transform: scale(1) rotate(0deg); opacity: 0.7; box-shadow: 0 0 0px rgba(52, 211, 153, 0); filter: brightness(1); }
+    }
+    .animate-goal-claimed-enhanced {
+      animation: goal-claimed-enhanced-effect 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    @keyframes ping-once { /* For Checkmark in GoalItem */
+        0% { transform: scale(0.5); opacity: 0; }
+        50% { transform: scale(1.5); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-ping-once {
+        animation: ping-once 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Mirror Upgrade Gem Fill Animation */
+    @keyframes gem-fill-effect {
+      0% { background-color: #334155; /* slate-700 */ transform: scale(0.8); opacity: 0.5; box-shadow: inset 0 0 2px rgba(0,0,0,0.3); }
+      30% { background-color: #7dd3fc; /* sky-300 */ transform: scale(1.1); opacity: 0.6; box-shadow: 0 0 5px 1px #7dd3fc, inset 0 1px 1px rgba(255,255,255,0.2); }
+      70% { background-color: #38bdf8; /* sky-400 */ transform: scale(1.05); opacity: 0.85; box-shadow: 0 0 12px 3px #38bdf8, inset 0 1px 2px rgba(255,255,255,0.3); }
+      100% { background-color: #0ea5e9; /* sky-500 */ transform: scale(1); opacity: 1; box-shadow: 0 0 15px 4px #0ea5e9, inset 0 1px 1px rgba(255,255,255,0.4); }
+    }
+    .animate-gem-fill {
+      animation: gem-fill-effect 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Mirror Upgrade Button Ripple Animation */
+    @keyframes ripple-effect {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    .ripple { /* Dynamically added span for ripple effect */
+      position: absolute;
+      border-radius: 50%;
+      background-color: rgba(56, 189, 248, 0.4); /* sky-400 with softer opacity */
+      transform: scale(0);
+      animation: ripple-effect 0.6s linear;
+      pointer-events: none;
+    }
+
+    /* End Screen Goal Notification Banner Animations and Styles */
+    @keyframes slide-up-fade-in {
+      from {
+        transform: translateY(100%) translateX(-50%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) translateX(-50%);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slide-down-fade-out {
+      from {
+        transform: translateY(0) translateX(-50%);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(100%) translateX(-50%);
+        opacity: 0;
+      }
+    }
+
+    .goal-notification-banner {
+      position: fixed;
+      bottom: 20px; /* Position above footer */
+      left: 50%;
+      /* translateX(-50%) is handled by keyframes for initial state */
+      width: auto; 
+      max-width: 90%;
+      padding: 1rem 1.5rem;
+      background-color: rgba(30, 41, 59, 0.95); /* slate-800 with opacity */
+      color: #e2e8f0; /* slate-200 */
+      border: 1px solid #475569; /* slate-600 */
+      border-radius: 0.75rem; /* rounded-lg */
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      z-index: 1000; /* Ensure it's on top of EndScreen content */
+      text-align: center;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      animation-duration: 0.5s;
+      animation-timing-function: ease-out;
+      animation-fill-mode: forwards; /* Keep final state of animation */
+    }
+
+    .goal-notification-banner.slide-in {
+      animation-name: slide-up-fade-in;
+    }
+
+    .goal-notification-banner.slide-out {
+      animation-name: slide-down-fade-out;
+    }
+
+    /* Battlefield Reduction Animation (Shake Effect for Board Container) */
+    @keyframes battlefield-shake-effect {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+      20%, 40%, 60%, 80% { transform: translateX(3px); }
+    }
+    .animate-battlefield-shake {
+      animation: battlefield-shake-effect 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    /* Tension Border for Mini-Arenas (Applied to Board container) */
+    .mini-arena-tension-border {
+      box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0.5), inset 0 0 10px 3px rgba(220, 38, 38, 0.4); /* red-500 / red-600 */
+      border: 2px solid rgba(239, 68, 68, 0.7); /* red-500 */
+      animation: pulse-red-border 1.5s infinite ease-in-out;
+    }
+    @keyframes pulse-red-border {
+      0%, 100% { box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0.4), inset 0 0 10px 2px rgba(220, 38, 38, 0.3); }
+      50% { box-shadow: 0 0 25px 8px rgba(239, 68, 68, 0.7), inset 0 0 15px 4px rgba(220, 38, 38, 0.6); } 
+    }
+
+  </style>
+<script>
+  /**
+   * Tailwind CSS Configuration for CDN
+   * Extends the default theme with custom colors for amber, purple, and stone palettes.
+   * This allows using these custom colors via Tailwind utility classes (e.g., bg-amber-300).
+   */
+  tailwind.config = { // Corrected: Use tailwind.config instead of module.exports for CDN
+    theme: {
+      extend: {
+        colors: {
+          amber: {
+            300: '#fcd34d', 
+            400: '#fbbf24', 
+            500: '#f59e0b', 
+            600: '#d97706', 
+            700: '#b45309',
+            900: '#78350f', 
+          },
+          purple: {
+            300: '#d8b4fe', 
+            400: '#c084fc', 
+            500: '#a855f7', 
+            600: '#9333ea', 
+            900: '#581c87', 
+          },
+          stone: { 
+            300: '#d6d3d1',
+            500: '#78716c',
+            600: '#57534e',
+            700: '#44403c',
+            800: '#292524',
+            900: '#1c1917',
+          }
+        }
+      }
+    }
+  }
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-900 text-slate-100">
+  <!-- Main application root container -->
+  <div id="root" class="flex-grow flex flex-col"></div>
+  <!-- Main application script -->
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
