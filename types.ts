@@ -1203,6 +1203,16 @@ export interface MetaProgressState {
   hasCompletedFirstRun: boolean;
   /** True if the player has not visited the Sanctuary yet (used for FTUE). */
   firstSanctuaryVisit: boolean;
+  /** True if the player has seen the Gold and Echoes intro in the second run. */
+  hasSeenGoldAndEchoes: boolean;
+  /** True if the player has been introduced to the Oracle. */
+  hasSeenOracle: boolean;
+  /** True if the player has been introduced to the Abyss Map. */
+  hasSeenAbyssMap: boolean;
+  /** True if the player has been introduced to Soul Fragments. */
+  hasSeenSoulFragments: boolean;
+  /** True if the player has completed the guided tour of the Knowledge Tree. */
+  hasCompletedTreeTour: boolean;
 }
 
 /**

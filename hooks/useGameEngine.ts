@@ -39,6 +39,7 @@ import { createEnemyInstance } from '../services/enemyFactory';
 import { playMidiSoundPlaceholder } from '../utils/soundUtils';
 import { GoalTrackingService } from '../services/goalTrackingService';
 import { AIPlayer } from '../core/ai/AIPlayer';
+import { useFTUEManager } from './useFTUEManager';
 
 export const PROLOGUE_MESSAGES: Record<number | string, string> = {
   1: "Bienvenido a Numeria's Edge. Revela casillas para encontrar tu camino.",
@@ -120,6 +121,11 @@ const getInitialMetaProgress = (): MetaProgressState => {
         nextFuryToAwakenIndex: 0,
         firstSanctuaryVisit: true,
         hasCompletedFirstRun: false,
+        hasSeenGoldAndEchoes: false,
+        hasSeenOracle: false,
+        hasSeenAbyssMap: false,
+        hasSeenSoulFragments: false,
+        hasCompletedTreeTour: false,
     };
 };
 
@@ -168,6 +174,7 @@ const getFuryOptionsForOracle = (level: number, awakenedFuryIds: string[], nextO
 export const useGameEngine = () => {
   const eventIdCounter = useRef(0);
   const [metaProgress, setMetaProgressState] = useState<MetaProgressState>(getInitialMetaProgress());
+  const ftueManager = useFTUEManager();
 
 
   const initialDummyEnemyArchetype = ENEMY_ARCHETYPE_DEFINITIONS[PROLOGUE_ENEMY_SHADOW_EMBER.id as EnemyArchetypeId];
@@ -857,6 +864,7 @@ export const useGameEngine = () => {
       const initialFloor = 0;
       const initialBoardDimensions = { rows: PROLOGUE_BOARD_ROWS, cols: PROLOGUE_BOARD_COLS };
       
+      ftueManager.resetSessionGuides();
       setRunStats({ ...initialRunStats, swordUsedThisLevel: false, swordUsedThisLevelForMirror: false, runUniqueEcosActivated: [], runUniqueFuriesExperienced: [], newlyCompletedGoalIdsThisRun: [] });
 
       let baseHp = INITIAL_PLAYER_HP, baseGold = INITIAL_PLAYER_GOLD, baseShield = INITIAL_PLAYER_SHIELD, currentMaxSoulFragments = INITIAL_MAX_SOUL_FRAGMENTS;
@@ -934,16 +942,17 @@ export const useGameEngine = () => {
       console.error("Error during startPrologueActual:", error);
       setGameState(prev => ({ ...prev, status: GameStatus.MainMenu, guidingTextKey: '' }));
     }
-  }, [generateBoardFromBoardParameters, metaProgress, setAndSaveMetaProgress]);
+  }, [generateBoardFromBoardParameters, metaProgress, setAndSaveMetaProgress, ftueManager]);
 
   const initializeNewRun = useCallback((isPrologueRun: boolean) => {
     if (isPrologueRun) {
       requestPrologueStart(); 
       return;
     }
+    ftueManager.resetSessionGuides();
     ftueEventTracker.current = {};
-    const initialLevel = 1;
-    const initialFloor = getCurrentFloorNumber(initialLevel);
+    const initialLevel = 0; // runLevel is 0-indexed for the first level of any run
+    const initialFloor = getCurrentFloorNumber(initialLevel === 0 ? 1 : initialLevel); // Map runLevel 0 to conceptual Floor 1 for enemy generation if needed
     const newRunMap = generateRunMap();
     console.log("[InitializeNewRun] Generated map for new run:", newRunMap); 
     const startNode = newRunMap.nodes[newRunMap.startNodeId];
@@ -990,7 +999,7 @@ export const useGameEngine = () => {
         return changed ? { ...prevMeta, goalsProgress: newGoalsProgress } : prevMeta;
     });
 
-    const encounter = generateEncounterForFloor(initialFloor, initialLevel, INITIAL_STARTING_FURIESS[0]);
+    const encounter = generateEncounterForFloor(initialFloor, initialLevel, INITIAL_STARTING_FURIESS[0], metaProgress);
     const biome = BIOME_DEFINITIONS[startNode.biomeId];
     let finalBoardParams = encounter.boardParams;
     if (biome && biome.boardModifiers) {
@@ -1017,7 +1026,11 @@ export const useGameEngine = () => {
       aiThinkingCellCoords: null, aiActionTargetCell: null,
     }));
 
-  }, [generateBoardFromBoardParameters, generateRunMap, metaProgress, setAndSaveMetaProgress, requestPrologueStart]);
+    if (metaProgress.hasCompletedFirstRun === true && !metaProgress.hasSeenGoldAndEchoes && initialLevel === 0) {
+      ftueManager.showGuide('FTUE_SECOND_RUN_INTRO', metaProgress);
+    }
+
+  }, [generateBoardFromBoardParameters, generateRunMap, metaProgress, setAndSaveMetaProgress, requestPrologueStart, ftueManager]);
 
 
   const applyFuryEffect = useCallback((ability: FuryAbility) => {
@@ -1260,6 +1273,10 @@ export const useGameEngine = () => {
         mapDecisionNowPending = true;
       }
 
+      if (metaProgress.hasCompletedFirstRun === true && !metaProgress.hasSeenGoldAndEchoes && !isFTUERun) {
+        ftueManager.showGuide('FTUE_ECHO_SCREEN_INTRO', metaProgress);
+      }
+
       setGameState(prev => ({
         ...prev,
         status: GameStatus.PostLevel,
@@ -1269,7 +1286,7 @@ export const useGameEngine = () => {
         // currentPhase will be handled by ENEMY_ACTION_RESOLVING -> PLAYER_TURN transition
       }));
     }
-  }, [board, player, enemy, activeEcos, addGameEvent, setGameStatus, recalculateAllClues, updateBoardVisualEffects, metaProgress, setAndSaveMetaProgress, generateEchoChoicesForPostLevelScreen, gameState.currentLevel, gameState.isPrologueActive, gameState.currentStretchCompletedLevels, gameState.levelsInCurrentStretch, runStats, advancePrologueStep]);
+  }, [board, player, enemy, activeEcos, addGameEvent, setGameStatus, recalculateAllClues, updateBoardVisualEffects, metaProgress, setAndSaveMetaProgress, generateEchoChoicesForPostLevelScreen, gameState.currentLevel, gameState.isPrologueActive, gameState.currentStretchCompletedLevels, gameState.levelsInCurrentStretch, runStats, advancePrologueStep, ftueManager]);
 
 
   const handlePlayerCellSelection = useCallback((row: number, col: number) => {
@@ -1366,6 +1383,10 @@ export const useGameEngine = () => {
             if (instintoBuscadorEcho) { const chance = (instintoBuscadorEcho.value as number) * (instintoBuscadorEcho.effectivenessMultiplier || 1); if (Math.random() < chance) { goldCollectedValue *= 2; triggerConditionalEchoAnimation(instintoBuscadorEcho.id); }}
             if (goldCollectedValue > 0) { newPlayerState.gold += goldCollectedValue; addGameEvent({ text: `+${goldCollectedValue}`, type: 'gold-player', targetId: 'player-stats-container' }); }
             if (gameState.isPrologueActive && gameState.prologueStep === 4 && !ftueEventTracker.current.firstGoldRevealed) { ftueEventTracker.current.firstGoldRevealed = true; advancePrologueStep(5); }
+
+            if (metaProgress.hasCompletedFirstRun === true && !metaProgress.hasSeenGoldAndEchoes) {
+              ftueManager.showGuide('FTUE_GOLD_REVEALED', metaProgress);
+            }
             newPlayerState.consecutiveSwordsRevealed = 0; // Reset combo on Gold
             break;
           case CellType.Clue:
@@ -1429,6 +1450,10 @@ export const useGameEngine = () => {
         mapDecisionNowPending = true;
       }
 
+      if (metaProgress.hasCompletedFirstRun === true && !metaProgress.hasSeenGoldAndEchoes && !isFTUERun) {
+        ftueManager.showGuide('FTUE_ECHO_SCREEN_INTRO', metaProgress);
+      }
+
       setGameState(prev => ({
         ...prev,
         status: GameStatus.PostLevel,
@@ -1467,7 +1492,7 @@ export const useGameEngine = () => {
     board, player, enemy, activeEcos, runStats, gameState, addGameEvent, setGameStatus, advancePrologueStep,
     triggerConditionalEchoAnimation, metaProgress, setAndSaveMetaProgress, checkAllPlayerBeneficialAttacksRevealed,
     triggerBattlefieldReduction, updateBoardVisualEffects, applyFuryEffect, generateEchoChoicesForPostLevelScreen,
-    generateBoardFromBoardParameters, setGamePhase,
+    generateBoardFromBoardParameters, setGamePhase, ftueManager
   ]);
 
 
@@ -1640,6 +1665,12 @@ export const useGameEngine = () => {
     setPlayer(prev => ({ ...prev, hp: newPlayerHp, maxHp: newPlayerMaxHp, gold: newPlayerGold, nextEchoCostsDoubled: newPlayerNextEchoCostsDoubled }));
     setActiveEcosState(newActiveEcos); if(!selectedFullEcho.isFree) setRunStats(prev => ({...prev, nonFreeEcosAcquiredThisRun: prev.nonFreeEcosAcquiredThisRun + 1}));
     if (gameState.isPrologueActive && gameState.currentLevel === PROLOGUE_LEVEL_ID && gameState.prologueStep === 7) advancePrologueStep(8);
+
+    if (metaProgress.hasCompletedFirstRun === true && !metaProgress.hasSeenGoldAndEchoes) {
+      ftueManager.markMilestoneComplete('hasSeenGoldAndEchoes', setAndSaveMetaProgress);
+      ftueManager.dismissGuide();
+    }
+
     if (selectedFullEcho.baseId === BASE_ECHO_CORAZON_ABISMO) {
         const sacrificeAmount = Math.floor(player.hp / 2); const hpAfterSacrifice = player.hp - sacrificeAmount;
         if (hpAfterSacrifice < 1) { addGameEvent({ text: "¡Sacrificio demasiado grande!", type: 'info' }); setActiveEcosState(activeEcos.filter(e => e.baseId !== BASE_ECHO_CORAZON_ABISMO)); return false; }
@@ -1651,7 +1682,7 @@ export const useGameEngine = () => {
         triggerConditionalEchoAnimation(selectedFullEcho.id); return true;
     } else setGameState(prev => ({ ...prev, postLevelActionTaken: true }));
     return false;
-  }, [player, activeEcos, addGameEvent, runStats, metaProgress, setAndSaveMetaProgress, triggerConditionalEchoAnimation, setGameState, advancePrologueStep, gameState.isPrologueActive, gameState.currentLevel, gameState.prologueStep]);
+  }, [player, activeEcos, addGameEvent, runStats, metaProgress, setAndSaveMetaProgress, triggerConditionalEchoAnimation, setGameState, advancePrologueStep, gameState.isPrologueActive, gameState.currentLevel, gameState.prologueStep, ftueManager]);
 
   const advanceFuryMinigamePhase = useCallback((shuffledOrder?: number[] | null) => {
     setGameState(prev => {
@@ -1778,6 +1809,9 @@ export const useGameEngine = () => {
             setRunStats(prev => ({ ...prev, soulFragmentsEarnedThisRun: newSoulFragments })); setGameState(prev => ({...prev, stretchRewardPending: null}));
         }
     }
+    if (metaProgress.hasCompletedFirstRun === true && !metaProgress.hasSeenGoldAndEchoes && !isFTUERun) {
+      ftueManager.showGuide('FTUE_ECHO_SCREEN_INTRO', metaProgress);
+    }
     setGameState(prev => ({
       ...prev,
       status: GameStatus.PostLevel,
@@ -1788,7 +1822,7 @@ export const useGameEngine = () => {
       mapDecisionPending: mapDecisionNowPending,
       // currentPhase: prev.currentPhase,
     }));
-  }, [gameState, enemy.archetypeId, activeEcos, player, metaProgress, setAndSaveMetaProgress, generateEchoChoicesForPostLevelScreen, addGameEvent, runStats.soulFragmentsEarnedThisRun]);
+  }, [gameState, enemy.archetypeId, activeEcos, player, metaProgress, setAndSaveMetaProgress, generateEchoChoicesForPostLevelScreen, addGameEvent, runStats.soulFragmentsEarnedThisRun, ftueManager]);
 
 
   return {
@@ -1799,5 +1833,7 @@ export const useGameEngine = () => {
     advancePrologueStep, conditionalEchoTriggeredId: gameState.conditionalEchoTriggeredId,
     popEvent, tryActivateAlquimiaImprovisada, tryActivateOjoOmnisciente, resolveCorazonDelAbismoChoice,
     confirmAndAbandonRun, triggerBattlefieldReduction, selectMapPathAndStartStretch, debugWinLevel,
+    currentFTUEGuide: ftueManager.currentGuide,
+    dismissFTUEGuide: ftueManager.dismissGuide,
   };
 };

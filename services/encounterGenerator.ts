@@ -133,6 +133,47 @@ export const generateEncounterForFloor = (
     };
   }
 
+  // Check for Level 1 of the "Second Run" FTUE (Gold/Echoes intro)
+  // This is after the first run (hasCompletedFirstRun === true)
+  // but before the player has seen the gold and echoes intro (hasSeenGoldAndEchoes === false)
+  // and it's the very first level of this new run (currentRunLevel === 0)
+  if (metaProgress.hasCompletedFirstRun === true &&
+      metaProgress.hasSeenGoldAndEchoes === false &&
+      currentRunLevel === 0) {
+
+    // Use normal enemy generation for this level (e.g. from Floor 1 definitions)
+    // but override board parameters to ensure high gold.
+    const originalFloorDef = FLOOR_DEFINITIONS.find(f => f.floorNumber === 1); // Assuming floor 1 for this
+    if (!originalFloorDef) throw new Error("Floor definition 1 not found for FTUE second run gold setup.");
+
+    const originalEncounterConfig = selectWeightedRandom(originalFloorDef.possibleEncounters);
+    if (!originalEncounterConfig) throw new Error("Could not select an encounter for FTUE second run gold setup.");
+
+    const { archetypeId, rank } = originalEncounterConfig;
+    // Pass a dummy/default oracleFury as it's not critical for this specific board setup focus
+    // The actual FTUE fury for this level might be simpler or even non-existent if the focus is purely on gold.
+    // For consistency, let's use a very basic one.
+    const dummyOracleFury = ALL_FURY_ABILITIES_MAP.get('fury_toque_vacio_initial');
+    if (!dummyOracleFury) throw new Error("Default Fury 'fury_toque_vacio_initial' not found for FTUE gold setup.");
+
+    const ftueGoldEnemyInstance = createEnemyInstance(archetypeId, rank, currentRunLevel, dummyOracleFury);
+
+    // Override board parameters for high gold yield
+    const ftueGoldBoardParams: BoardParameters = {
+      rows: 8, // GDD: Second run FTUE levels are 8x8
+      cols: 8,
+      densityPercent: 25, // Decent density to ensure enough items
+      objectRatioKey: 'ftueSecondRunSufficientGold', // Use the new gold-rich ratio
+      traps: 0, // No traps for this specific intro level
+      irregularPatternType: null,
+    };
+
+    return {
+      enemy: ftueGoldEnemyInstance,
+      boardParams: ftueGoldBoardParams,
+    };
+  }
+
   // --- Existing Non-FTUE logic starts here ---
   const floorDef = FLOOR_DEFINITIONS.find(f => f.floorNumber === floorNumber);
   if (!floorDef) {

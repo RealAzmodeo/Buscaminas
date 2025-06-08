@@ -207,6 +207,8 @@ export const OBJECT_RATIO_DEFINITIONS: Record<string, ObjectRatioDefinition> = {
   'misleadingClues': { attacks: 6, gold: 3 },
   'resourceDrain': { attacks: 7, gold: 1 },
   'prologueFixed': { attacks: 3, gold: 3},
+  'ftueAttackClueOnly': { attacks: 1, gold: 0 }, // Placeholder, actual FTUE board content (attack/clue only) is handled in useGameEngine's generateBoardFromBoardParameters
+  'ftueSecondRunSufficientGold': { attacks: 4, gold: 6 }, // Ensures plenty of gold for FTUE Echo intro
 };
 
 // --- Floor Definitions ---
