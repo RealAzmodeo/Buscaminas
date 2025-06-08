@@ -1,8 +1,11 @@
-import { Echo, EchoEffectType, Rarity } from '../../types';
-import { BASE_ECHO_CORAZON_HIERRO, ECO_UNLOCK_AWAKENING_POINTS } from '../../constants';
+import { Echo, EchoEffectType, Rarity } from "../../types";
+import {
+  BASE_ECHO_CORAZON_HIERRO,
+  ECO_UNLOCK_AWAKENING_POINTS,
+} from "../../constants";
 
 const eco_corazon_hierro_2: Echo = {
-  id: 'eco_corazon_hierro_2',
+  id: "eco_corazon_hierro_2",
   baseId: BASE_ECHO_CORAZON_HIERRO,
   name: "Corazón de Hierro",
   level: 2,
@@ -12,7 +15,7 @@ const eco_corazon_hierro_2: Echo = {
   effectType: EchoEffectType.IncreaseMaxHP,
   value: 3,
   rarity: Rarity.Rare,
-  awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS
+  awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS,
 };
 
 export default eco_corazon_hierro_2;

@@ -1,8 +1,8 @@
-import { Echo, EchoEffectType, Rarity } from '../../types';
-import { BASE_ECHO_RECOVER_HP } from '../../constants';
+import { Echo, EchoEffectType, Rarity } from "../../types";
+import { BASE_ECHO_RECOVER_HP } from "../../constants";
 
 const eco_recover_hp_free_standard: Echo = {
-  id: 'eco_recover_hp_free_standard',
+  id: "eco_recover_hp_free_standard",
   baseId: BASE_ECHO_RECOVER_HP,
   name: "Alivio Fugaz Estándar",
   level: 1,
@@ -12,7 +12,7 @@ const eco_recover_hp_free_standard: Echo = {
   isFree: true,
   effectType: EchoEffectType.GainHP,
   value: 2,
-  rarity: Rarity.Common
+  rarity: Rarity.Common,
 };
 
 export default eco_recover_hp_free_standard;
