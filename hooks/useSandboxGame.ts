@@ -7,8 +7,9 @@ import {
 import {
   INITIAL_PLAYER_HP, INITIAL_PLAYER_GOLD, INITIAL_PLAYER_SHIELD,
   FURY_INCREMENT_PER_CLICK, ATTACK_DAMAGE_PLAYER_VS_ENEMY, ATTACK_DAMAGE_ENEMY_VS_PLAYER, GOLD_VALUE, // Using new ATTACK_DAMAGE constants
-  ALL_ECHOS_MAP, BASE_ECHO_ECO_CASCADA, 
+  BASE_ECHO_ECO_CASCADA,
 } from '../constants';
+import { ALL_ECHOS_MAP } from '../core/echos'; // Updated import path
 import { playMidiSoundPlaceholder } from '../utils/soundUtils';
 
 

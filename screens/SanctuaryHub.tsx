@@ -4,13 +4,12 @@ import { MetaProgressState, Echo, FuryAbility, Rarity, GameStatus } from '../typ
 import Button from '../components/common/Button';
 import {
     ECO_TREE_STRUCTURE_DATA,
-    ALL_ECHOS_MAP,
     ECO_UNLOCK_AWAKENING_POINTS,
     FURY_AWAKENING_THRESHOLD,
-    ALL_ECHOS_LIST,
-    FURY_ABILITIES_TO_AWAKEN_SEQUENTIALLY, // Import
-    ALL_FURY_ABILITIES_MAP // Import
+    // FURY_ABILITIES_TO_AWAKEN_SEQUENTIALLY, // Will be imported from core/furies
 } from '../constants';
+import { ALL_ECHOS_MAP, ALL_ECHOS_LIST } from '../core/echos'; // Updated import
+import { ALL_FURY_ABILITIES_MAP, FURY_ABILITIES_TO_AWAKEN_SEQUENTIALLY } from '../core/furies'; // Updated import
 import { playMidiSoundPlaceholder } from '../utils/soundUtils';
 import { GoalTrackingService } from '../services/goalTrackingService'; // Import GoalTrackingService
 

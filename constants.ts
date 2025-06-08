@@ -145,55 +145,13 @@ export const BASE_ECHO_APRENDIZAJE_RAPIDO = 'base_aprendizaje_rapido';
 export const BASE_ECHO_RECOVER_HP = 'base_recover_hp';
 
 // --- Echo Definitions ---
+// These are now defined in core/echos/index.ts and imported from there.
+// export const INITIAL_STARTING_ECHOS: Echo[] = [ ... ];
+// export const NEW_AVAILABLE_ECHOS_FOR_TREE: Echo[] = [ ... ];
+// export const FREE_ECHO_OPTIONS: Echo[] = [ ... ];
+// export const ALL_ECHOS_LIST: Echo[] = [ ... ];
+// export const ALL_ECHOS_MAP: Map<string, Echo> = new Map( ... );
 
-/** Initial Echos available to the player at the start of the game or as common choices. */
-export const INITIAL_STARTING_ECHOS: Echo[] = [
-  { id: 'eco_vision_aurea_1', baseId: BASE_ECHO_VISION_AUREA, name: "Visión Áurea", level: 1, description: "Pistas discriminan <strong>Oro</strong> (ej: [Oro] / [Resto]).", icon: "👁️‍🗨️", cost: 2, effectType: EchoEffectType.UpdateClueSystem, value: 'vision_aurea_oro', rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_vigor_fugaz_initial', baseId: 'base_vigor_fugaz_initial', name: "Vigor Fugaz", level: 1, description: "<strong>+1 HP Máximo</strong> para la run actual.", icon: "💓", cost: 1, effectType: EchoEffectType.IncreaseMaxHP, value: 1, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_filo_afortunado_initial', baseId: 'base_filo_afortunado_initial', name: "Impacto Afortunado", level: 1, description: "La <strong>primera casilla de Ataque</strong> revelada por ti en cada nivel tiene un <strong>50%</strong> de probabilidad de infligir <strong>+1 daño</strong>.", icon: "🍀💥", cost: 1, effectType: EchoEffectType.GenericPlaceholder, value: { chance: 0.5, bonus: 1 }, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_monedero_iniciado_initial', baseId: 'base_monedero_iniciado_initial', name: "Monedero de Iniciado", level: 1, description: "Ganas <strong>+3 Oro</strong> al completar el nivel actual.", icon: "💰✨", cost: 1, effectType: EchoEffectType.GenericPlaceholder, value: 3, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_recover_hp_free_1', baseId: BASE_ECHO_RECOVER_HP, name: "Alivio Fugaz", level: 1, description: "Restaura <strong>1 HP</strong>. Un respiro en la oscuridad.", icon: "💖", cost: 0, isFree: true, effectType: EchoEffectType.GainHP, value: 1, rarity: Rarity.Common },
-  { id: 'eco_sentido_alerta_initial', baseId: 'base_sentido_alerta_initial', name: "Sentido Alerta", level: 1, description: "Casillas con cualquier objeto (Ataque, Oro) emiten un <strong>aura visual muy sutil</strong> al pasar el cursor cerca (no discrimina tipo).", icon: "🔔", cost: 0, isFree: true, effectType: EchoEffectType.GenericPlaceholder, rarity: Rarity.Common },
-  { id: 'eco_paso_cauteloso_initial', baseId: 'base_paso_cauteloso_initial', name: "Resguardo Cauteloso", level: 1, description: "La <strong>primera casilla de Ataque</strong> que te dañe en toda la run inflige <strong>1 de daño menos</strong>.", icon: "👣🛡️", cost: 1, effectType: EchoEffectType.GenericPlaceholder, value: 1, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_chispa_ingenio_initial', baseId: 'base_chispa_ingenio_initial', name: "Chispa de Ingenio", level: 1, description: "El coste en Oro del <strong>próximo Eco que compres se reduce en 1</strong> (coste mínimo 1). Se consume al usarlo.", icon: "💡💰", cost: 2, effectType: EchoEffectType.GenericPlaceholder, value: 1, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_reflejos_preparados_initial', baseId: 'base_reflejos_preparados_initial', name: "Reflejos Preparados", level: 1, description: "La <strong>primera vez</strong> que la barra de Furia del enemigo se llena en un nivel, tarda un <strong>20% más de clics</strong> en llenarse.", icon: "⏳🔥", cost: 2, effectType: EchoEffectType.GenericPlaceholder, value: 0.20, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-];
-
-/** Echos that become available for unlocking in the Sanctuary Eco Tree. */
-export const NEW_AVAILABLE_ECHOS_FOR_TREE: Echo[] = [
-  { id: 'eco_vision_aurea_2', baseId: BASE_ECHO_VISION_AUREA, name: "Visión Áurea", level: 2, description: "(Evolución) Pistas discriminan <strong>Oro</strong> y revelan la <strong>cantidad de Oro</strong> en casillas adyacentes ocultas.", icon: "👁️‍🗨️✨", cost: 4, effectType: EchoEffectType.UpdateClueSystem, value: 'vision_aurea_oro_cantidad', rarity: Rarity.Rare, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_detector_peligros_1', baseId: BASE_ECHO_DETECTOR_PELIGROS, name: "Sentido de Amenaza", level: 1, description: "Pistas discriminan <strong>Ataque</strong> (ej: [Ataque] / [Resto]).", icon: "⚠️", cost: 2, effectType: EchoEffectType.UpdateClueSystem, value: 'detector_amenaza_ataque', rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_clarividencia_total_1', baseId: BASE_ECHO_CLARIVIDENCIA_TOTAL, name: "Clarividencia Total", level: 1, description: "(Req: Visión Áurea & Sentido Amenaza) Pistas muestran desglose: <strong>[Oro] / [Ataque]</strong>.", icon: "🔮", cost: 6, effectType: EchoEffectType.UpdateClueSystem, value: 'clarividencia_total_ataque_oro', rarity: Rarity.Epic, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_ojo_omnisciente_1', baseId: BASE_ECHO_OJO_OMNISCIENTE, name: "Ojo Omnisciente", level: 1, description: "(Evol. Clarividencia Total) Además, 1/nivel, enfoca pista para <strong>revelar un objeto contribuyente</strong> cercano.", icon: "🌟", cost: 10, effectType: EchoEffectType.RevealNearestItem, value: { uses: 1 }, rarity: Rarity.Legendary, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_cascada_1', baseId: BASE_ECHO_ECO_CASCADA, name: "Eco de Cascada", level: 1, description: "Casillas '<strong>0</strong>' revelan adyacentes (<strong>1 anillo</strong>).", icon: "🌊", cost: 2, effectType: EchoEffectType.CascadeReveal, value: 1, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_cascada_2', baseId: BASE_ECHO_ECO_CASCADA, name: "Eco de Cascada", level: 2, description: "(Evolución) Cascada se extiende <strong>2 anillos</strong>.", icon: "🌊🌊", cost: 4, effectType: EchoEffectType.CascadeReveal, value: 2, rarity: Rarity.Rare, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_cascada_3', baseId: BASE_ECHO_ECO_CASCADA, name: "Eco de Cascada", level: 3, description: "(Evolución) Cascada se extiende <strong>3 anillos</strong> y tiene baja prob. de <strong>no activar casilla de Ataque</strong>.", icon: "🌊🌊🌊", cost: 7, effectType: EchoEffectType.CascadeReveal, value: { depth: 3, disarmChance: 0.15 }, rarity: Rarity.Epic, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_marcador_tactico_1', baseId: BASE_ECHO_MARCADOR_TACTICO, name: "Marcador Táctico", level: 1, description: "Permite marcar casillas con una <strong>bandera genérica</strong>.", icon: "🚩", cost: 3, effectType: EchoEffectType.EnableCellMarking, value: 'generic_flag', rarity: Rarity.Rare, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_cartografia_avanzada_1', baseId: BASE_ECHO_CARTOGRAFIA_AVANZADA, name: "Cartografía Avanzada", level: 1, description: "(Evolución) Permite <strong>marcadores específicos</strong> (Ataque Peligroso, Ataque Ventajoso, Oro, ?). Marcados incorrectamente <strong>no se pueden clickar</strong> por <strong>3 clics</strong>.", icon: "🗺️", cost: 5, effectType: EchoEffectType.EnableCellMarking, value: { types: ['bomb', 'sword', 'gold', 'question'], lockIncorrectDuration: 3 }, rarity: Rarity.Epic, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_corazon_hierro_1', baseId: BASE_ECHO_CORAZON_HIERRO, name: "Corazón de Hierro", level: 1, description: "<strong>+2 HP Máximo</strong> y te cura esa cantidad.", icon: "❤️‍🩹", cost: 3, effectType: EchoEffectType.IncreaseMaxHP, value: 2, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_corazon_hierro_2', baseId: BASE_ECHO_CORAZON_HIERRO, name: "Corazón de Hierro", level: 2, description: "<strong>+3 HP Máximo</strong> y te cura esa cantidad.", icon: "❤️‍🩹+", cost: 5, effectType: EchoEffectType.IncreaseMaxHP, value: 3, rarity: Rarity.Rare, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_piel_piedra_1', baseId: BASE_ECHO_PIEL_PIEDRA, name: "Piel de Piedra", level: 1, description: "Reduce el daño de la <strong>primera casilla de Ataque (daño enemigo)</strong> sufrida en cada nivel en <strong>1</strong>.", icon: "🛡️", cost: 4, effectType: EchoEffectType.FirstBombDamageReduction, value: 1, rarity: Rarity.Rare, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_venganza_espectral_1', baseId: BASE_ECHO_VENGANZA_ESPECTRAL, name: "Venganza Espectral", level: 1, description: "Al recibir daño de Ataque, tu próximo Ataque hace <strong>+1 daño</strong> adicional.", icon: "👻💥", cost: 5, effectType: EchoEffectType.TempDamageBuffAfterBomb, value: 1, rarity: Rarity.Epic, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_ultimo_aliento_1', baseId: BASE_ECHO_ULTIMO_ALIENTO, name: "Último Aliento", level: 1, description: "Al llegar a <strong>1 HP</strong> (1 vez/run), ganas <strong>invulnerabilidad por 3 clics</strong> y tus Ataques hacen <strong>daño crítico</strong>.", icon: "⏳", cost: 8, effectType: EchoEffectType.LastStandInvulnerabilityCrit, value: { clicks: 3 }, rarity: Rarity.Legendary, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_maestria_estocada_1', baseId: BASE_ECHO_MAESTRIA_ESTOCADA, name: "Maestría del Impacto", level: 1, description: "Revelar <strong>2 casillas de Ataque</strong> seguidas: la 2ª inflige <strong>+1 daño</strong>.", icon: "💨💥", cost: 3, effectType: EchoEffectType.ComboDamageBonus, value: { count: 2, bonus: 1 }, rarity: Rarity.Rare, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_torrente_acero_1', baseId: BASE_ECHO_TORRENTE_ACERO, name: "Torrente de Impactos", level: 1, description: "(Evol. Maestría Impacto) Combo de Ataques a <strong>3</strong>, daño incremental. 3 Ataques seguidos <strong>reducen Furia enemiga</strong>.", icon: "💨💥+", cost: 6, effectType: EchoEffectType.ComboDamageBonus, value: { count: 3, bonusIncremental: true, reduceFury: true }, rarity: Rarity.Epic, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_bolsa_agrandada_1', baseId: BASE_ECHO_BOLSA_AGRANDADA, name: "Bolsa Agrandada", level: 1, description: "Comienzas cada nivel con <strong>+3 Oro</strong>.", icon: "🎒", cost: 2, effectType: EchoEffectType.StartWithBonusGold, value: 3, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_instinto_buscador_1', baseId: BASE_ECHO_INSTINTO_BUSCADOR, name: "Instinto del Buscador", level: 1, description: "Pequeña prob. (<strong>10%</strong>) que una casilla de Oro contenga <strong>doble valor</strong>.", icon: "💎", cost: 4, effectType: EchoEffectType.DoubleGoldChance, value: 0.10, rarity: Rarity.Rare, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_alquimia_improvisada_1', baseId: BASE_ECHO_ALQUIMIA_IMPROVISADA, name: "Alquimia Improvisada", level: 1, description: "Gasta <strong>5 Oro</strong> para <strong>ignorar el daño</strong> de la próxima casilla de Ataque revelada por enemigo (1/nivel, manual).", icon: "🧪", cost: 5, effectType: EchoEffectType.SpendGoldIgnoreBomb, value: 5, rarity: Rarity.Epic, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_corazon_abismo_1', baseId: BASE_ECHO_CORAZON_ABISMO, name: "Corazón del Abismo", level: 1, description: "1/run: sacrifica <strong>50% HP actual</strong> por <strong>Eco Épico aleatorio</strong> o <strong>duplicar efecto de Eco C/R</strong>.", icon: "🌀", cost: 10, effectType: EchoEffectType.SacrificeHpForPower, value: null, rarity: Rarity.Legendary, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_paso_ligero_1', baseId: BASE_ECHO_PASO_LIGERO, name: "Paso Ligero", level: 1, description: "La primera <strong>Trampa</strong> revelada en un nivel es ignorada.", icon: "👟", cost: 4, effectType: EchoEffectType.IgnoreFirstTrap, value: true, rarity: Rarity.Rare, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_voluntad_inquebrantable_1', baseId: BASE_ECHO_VOLUNTAD_INQUEBRANTABLE, name: "Voluntad Inquebrantable", level: 1, description: "Efectos de Furia del enemigo (daño, pérdida oro) se reducen un <strong>25%</strong>.", icon: "💪", cost: 6, effectType: EchoEffectType.ReduceFuryEffectPotency, value: 0.25, rarity: Rarity.Epic, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-  { id: 'eco_aprendizaje_rapido_1', baseId: BASE_ECHO_APRENDIZAJE_RAPIDO, name: "Aprendizaje Rápido", level: 1, description: "La opción de <strong>Eco gratuita</strong> post-nivel es ligeramente mejor.", icon: "🧠", cost: 3, effectType: EchoEffectType.ImproveEchoChoice, value: null, rarity: Rarity.Common, awakeningPoints: ECO_UNLOCK_AWAKENING_POINTS },
-].filter(echo => !INITIAL_STARTING_ECHOS.some(initial => initial.id === echo.id)); // Ensure no duplicates if an echo was moved from initial to tree
-
-/** Pool of Echos initially available to the player for post-level choices (might include some from INITIAL_STARTING_ECHOS). */
-export const AVAILABLE_ECHOS: Echo[] = [ ...INITIAL_STARTING_ECHOS ];
-/** Options for free Echos offered post-level (e.g., HP recovery). */
-export const FREE_ECHO_OPTIONS: Echo[] = [ { id: 'eco_recover_hp_free_standard', baseId: BASE_ECHO_RECOVER_HP, name: "Alivio Fugaz Estándar", level: 1, description: "Restaura <strong>2 HP</strong>. Un respiro en la oscuridad.", icon: "💖", cost: 0, isFree: true, effectType: EchoEffectType.GainHP, value: 2, rarity: Rarity.Common } ];
-/** Comprehensive list of all defined Echos in the game, used for lookups. */
-export const ALL_ECHOS_LIST: Echo[] = [ ...INITIAL_STARTING_ECHOS, ...NEW_AVAILABLE_ECHOS_FOR_TREE, ...FREE_ECHO_OPTIONS ].filter((echo, index, self) => index === self.findIndex(e => e.id === echo.id));
-/** Map of all Echos, keyed by their specific ID, for quick lookup. */
-export const ALL_ECHOS_MAP: Map<string, Echo> = new Map( ALL_ECHOS_LIST.map(echo => [echo.id, echo]) );
 
 /** Defines the structure and unlock progression of Echos in the Sanctuary's Eco Tree. */
 export const ECO_TREE_STRUCTURE_DATA: EcoTreeNodeData[] = [
@@ -249,64 +207,33 @@ export const PROLOGUE_SHADOW_EMBER_FURY_ABILITY: FuryAbility = {
 };
 /** Board configuration for the prologue. Uses unified 'attacks'. */
 export const PROLOGUE_BOARD_CONFIG: BoardConfig = { rows: PROLOGUE_BOARD_ROWS, cols: PROLOGUE_BOARD_COLS, attacks: 3, gold: 3, traps: 0 };
-/** Base IDs of Echos predefined as choices after completing the prologue. */
-export const PROLOGUE_PREDEFINED_ECHO_CHOICES_BASE_IDS: string[] = [ BASE_ECHO_VISION_AUREA, 'base_vigor_fugaz_initial' ];
+// PROLOGUE_PREDEFINED_ECHO_CHOICES_BASE_IDS is now in core/echos/index.ts
 
 
 // --- Fury Ability Definitions ---
+// These are now defined in core/furies/index.ts and imported from there if needed.
+// export const INITIAL_STARTING_FURIESS: FuryAbility[] = [ ... ];
+// const ALL_GAME_FURY_ABILITIES_BASE: FuryAbility[] = [ ... ];
+// export const ALL_GAME_FURY_ABILITIES: FuryAbility[] = [ ... ];
+// export const ALL_FURY_ABILITIES_MAP: Map<string, FuryAbility> = new Map( ... );
+// export const FURY_ABILITIES_TO_AWAKEN_SEQUENTIALLY: string[] = [ ... ]; // Now moved to core/furies/index.ts
 
-/** Initial pool of Fury abilities available for the Oracle Minigame at the start of a run or for new players. */
-export const INITIAL_STARTING_FURIESS: FuryAbility[] = [
-  { id: 'fury_toque_vacio_initial', name: "Toque del Vacío", description: "Jugador pierde <strong>1 HP</strong>.", icon: "💔", effectType: FuryAbilityEffectType.PlayerDamage, value: 1, rarity: Rarity.Common },
-  { id: 'fury_semilla_inoportuna_initial', name: "Semilla Inoportuna", description: "<strong>1 nueva Casilla de Ataque</strong> aparece en el tablero.", icon: "🌱💥", effectType: FuryAbilityEffectType.BoardAddAttacks, value: 1, rarity: Rarity.Common },
-  { id: 'fury_velo_momentaneo_initial', name: "Velo Momentáneo", description: "<strong>1 Pista</strong> revelada se oculta.", icon: "💨❓", effectType: FuryAbilityEffectType.BoardHideClues, value: 1, rarity: Rarity.Common },
-  { id: 'fury_aliento_efimero_initial', name: "Aliento Efímero", description: "Enemigo recupera <strong>1 HP</strong>.", icon: "😮‍💨❤️", effectType: FuryAbilityEffectType.EnemyHeal, value: 1, rarity: Rarity.Common },
-  { id: 'fury_impuesto_sombrio_initial', name: "Impuesto Sombrío", description: "Jugador pierde <strong>1 Oro</strong>.", icon: "💸", effectType: FuryAbilityEffectType.PlayerGoldLoss, value: 1, rarity: Rarity.Common },
-  { id: 'fury_torpeza_fugaz_initial', name: "Torpeza Fugaz", description: "El próximo Ataque revelado por el jugador tiene un <strong>25%</strong> de probabilidad de fallar (no hacer daño).", icon: "💢", effectType: FuryAbilityEffectType.PlayerChanceToFailAttack, value: 0.25, rarity: Rarity.Common },
-  { id: 'fury_rescoldo_persistente_initial', name: "Rescoldo Persistente", description: "La barra de Furia del enemigo se llena un <strong>10%</strong> automáticamente para la próxima activación.", icon: "♨️", effectType: FuryAbilityEffectType.EnemyFuryBarPartialFill, value: 0.10, rarity: Rarity.Common },
-  { id: 'fury_eco_distorsionado_menor_initial', name: "Eco Distorsionado Menor", description: "<strong>25%</strong> prob. de que el Eco más reciente del jugador se desactive por <strong>2 clics</strong>. Si no hay Ecos, no pasa nada.", icon: "🎶🚫", effectType: FuryAbilityEffectType.PlayerTemporaryEcoDeactivation, value: { chance: 0.25, duration: 2 }, rarity: Rarity.Common },
-  { id: 'fury_mirada_inquietante_initial', name: "Mirada Inquietante", description: "Pistas reveladas parpadean o se vuelven borrosas por <strong>2-3 clics</strong> (efecto visual).", icon: "👁️‍🗨️💢", effectType: FuryAbilityEffectType.BoardVisualDisruption, value: { duration: 3 }, rarity: Rarity.Common },
-];
-
-/** Base list of more advanced Fury abilities that can be awakened or appear later in the game. */
-const ALL_GAME_FURY_ABILITIES_BASE: FuryAbility[] = [
-  { id: 'fury_impacto_menor', name: "Impacto Menor", description: "Jugador pierde <strong>1 HP</strong>.", icon: "💥", effectType: FuryAbilityEffectType.PlayerDamage, value: 1, rarity: Rarity.Common },
-  { id: 'fury_golpe_certero', name: "Golpe Certero", description: "Jugador pierde <strong>3 HP</strong>.", icon: "🎯", effectType: FuryAbilityEffectType.PlayerDamage, value: 3, rarity: Rarity.Rare },
-  { id: 'fury_tormenta_esquirlas', name: "Tormenta de Esquirlas", description: "Jugador pierde <strong>2 HP</strong> y <strong>5 Oro</strong>.", icon: "🌪️", effectType: FuryAbilityEffectType.PlayerDamageAndGoldLoss, value: { hp: 2, gold: 5 }, rarity: Rarity.Epic },
-  { id: 'fury_aliento_aniquilador', name: "Aliento Aniquilador", description: "Jugador pierde <strong>33%</strong> de su <strong>HP MÁXIMO</strong> actual.", icon: "💀", effectType: FuryAbilityEffectType.PlayerPercentMaxHpDamage, value: 0.33, rarity: Rarity.Legendary },
-  { id: 'fury_siembra_fugaz', name: "Siembra Fugaz", description: "<strong>1 nueva Casilla de Ataque</strong> aparece en el tablero.", icon: "🌱💥", effectType: FuryAbilityEffectType.BoardAddAttacks, value: 1, rarity: Rarity.Common },
-  { id: 'fury_nido_peligros', name: "Nido de Peligros", description: "<strong>2-3 nuevas Casillas de Ataque</strong> aparecen.", icon: "🥚💥", effectType: FuryAbilityEffectType.BoardAddAttacks, value: {min: 2, max: 3}, rarity: Rarity.Rare },
-  { id: 'fury_campo_minado_subito', name: "Campo de Ataque Súbito", description: "Área de <strong>2x2</strong> es sembrada con <strong>Casillas de Ataque y Oro</strong>.", icon: "💥💰", effectType: FuryAbilityEffectType.BoardAddMixedItems, value: { area: '2x2', items: ['attack', 'gold'] }, rarity: Rarity.Epic },
-  { id: 'fury_remodelacion_caotica', name: "Remodelación Caótica", description: "Una <strong>cuarta parte</strong> del tablero se re-oculta y su contenido se <strong>regenera aleatoriamente</strong>.", icon: "🔄", effectType: FuryAbilityEffectType.BoardRegenerateSection, value: { fraction: 0.25 }, rarity: Rarity.Legendary },
-  { id: 'fury_sombras_persistentes', name: "Sombras Persistentes", description: "<strong>3 casillas de Pista</strong> reveladas se ocultan.", icon: "🕶️", effectType: FuryAbilityEffectType.BoardHideClues, value: 3, rarity: Rarity.Rare },
-  { id: 'fury_gran_eclipse', name: "Gran Eclipse", description: "<strong>TODAS las Pistas</strong> reveladas se ocultan.", icon: "🌑", effectType: FuryAbilityEffectType.BoardHideAllClues, value: null, rarity: Rarity.Epic },
-  { id: 'fury_vigor_momentaneo', name: "Vigor Momentáneo", description: "Enemigo recupera <strong>3 HP</strong>.", icon: "💪❤️", effectType: FuryAbilityEffectType.EnemyHeal, value: 3, rarity: Rarity.Common },
-  { id: 'fury_resistencia_impia', name: "Resistencia Impía", description: "Enemigo gana <strong>5 Armadura</strong> temporal.", icon: "🛡️👿", effectType: FuryAbilityEffectType.EnemyGainArmor, value: 5, rarity: Rarity.Rare },
-  { id: 'fury_festin_oscuro', name: "Festín Oscuro", description: "Enemigo recupera <strong>5 HP</strong> y su Furia se carga un <strong>25%</strong>.", icon: "🍽️👿", effectType: FuryAbilityEffectType.EnemyHealAndFuryCharge, value: { heal: 5, furyChargePercent: 0.25 }, rarity: Rarity.Epic },
-];
-
-/** Comprehensive list of all Fury abilities in the game, ensuring no duplicates by ID. */
-export const ALL_GAME_FURY_ABILITIES: FuryAbility[] = [
-    ...INITIAL_STARTING_FURIESS,
-    ...ALL_GAME_FURY_ABILITIES_BASE
-].filter((fury, index, self) => index === self.findIndex((f) => f.id === fury.id));
-
-/** Map of all Fury abilities, keyed by their ID, for quick lookup. */
-export const ALL_FURY_ABILITIES_MAP: Map<string, FuryAbility> = new Map(
-  ALL_GAME_FURY_ABILITIES.map(fury => [fury.id, fury])
-);
 
 /** Ordered list of Fury ability IDs to be awakened sequentially through meta-progression (Eco Tree). */
-export const FURY_ABILITIES_TO_AWAKEN_SEQUENTIALLY: string[] = [
-    'fury_golpe_certero', // Rare
-    'fury_nido_peligros', // Rare
-    'fury_sombras_persistentes', // Rare
-    'fury_resistencia_impia', // Rare
-    'fury_tormenta_esquirlas', // Epic
-    'fury_campo_minado_subito', // Epic
-    'fury_gran_eclipse', // Epic
-    'fury_festin_oscuro', // Epic
-    'fury_aliento_aniquilador', // Legendary
-    'fury_remodelacion_caotica', // Legendary
-    // Future: Add more Epic/Legendary Furies here as they are defined and balanced.
-];
+// This specific constant is still used by name in useGameEngine, so we keep its definition here for now,
+// but it should ideally also be sourced from core/furies if it's considered part of the Fury definitions.
+// For this refactor, the goal was to move the actual FuryAbility objects and their collections.
+// Keeping this array of strings here is acceptable for now.
+// export const FURY_ABILITIES_TO_AWAKEN_SEQUENTIALLY: string[] = [ // Commenting out as it's moved
+//     'fury_golpe_certero', // Rare
+//     'fury_nido_peligros', // Rare
+//     'fury_sombras_persistentes', // Rare
+//     'fury_resistencia_impia', // Rare
+//     'fury_tormenta_esquirlas', // Epic
+//     'fury_campo_minado_subito', // Epic
+//     'fury_gran_eclipse', // Epic
+//     'fury_festin_oscuro', // Epic
+//     'fury_aliento_aniquilador', // Legendary
+//     'fury_remodelacion_caotica', // Legendary
+//     // Future: Add more Epic/Legendary Furies here as they are defined and balanced.
+// ];

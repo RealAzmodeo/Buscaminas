@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Echo, PlayerState, Rarity, ActiveEchoId } from '../../types';
 import Button from '../common/Button';
 import { playMidiSoundPlaceholder } from '../../utils/soundUtils';
-import { ALL_ECHOS_MAP } from '../../constants';
+import { ALL_ECHOS_MAP } from '../../core/echos'; // Updated import path
 
 interface EchoCardProps {
   echo: Echo;

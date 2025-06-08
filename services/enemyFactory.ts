@@ -18,7 +18,7 @@ import {
   ARCHETYPE_HP_BONUSES, // New archetype HP bonuses
   RANK_HP_BONUSES, // New rank HP bonuses
 } from '../constants/difficultyConstants';
-import { ALL_FURY_ABILITIES_MAP } from '../constants';
+import { ALL_FURY_ABILITIES_MAP } from '../core/furies'; // Updated import path
 import { PROLOGUE_LEVEL_ID } from '../constants'; // Import PROLOGUE_LEVEL_ID
 
 let enemyInstanceCounter = 0;
