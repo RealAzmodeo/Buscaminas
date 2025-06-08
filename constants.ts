@@ -201,10 +201,11 @@ export const PROLOGUE_ENEMY_SHADOW_EMBER: EnemyArchetypeDefinition = {
   aiType: AIType.Default, // Simple AI for prologue
   isSpecial: true,
 };
-/** Specific Fury ability for the prologue's Shadow Ember enemy (usually very weak or scripted). */
-export const PROLOGUE_SHADOW_EMBER_FURY_ABILITY: FuryAbility = {
-  id: 'fury_shadow_ember_spark_prologue', name: "Chispa Agónica", description: "Un breve espasmo de energía te roza. Pierdes <strong>1 HP</strong>.", icon: '💥', effectType: FuryAbilityEffectType.PlayerDamage, value: 1, rarity: Rarity.Common,
-};
+// PROLOGUE_SHADOW_EMBER_FURY_ABILITY is now defined in core/furies/fury_shadow_ember_spark_prologue.ts and exported from core/furies/index.ts
+// /** Specific Fury ability for the prologue's Shadow Ember enemy (usually very weak or scripted). */
+// export const PROLOGUE_SHADOW_EMBER_FURY_ABILITY: FuryAbility = {
+//   id: 'fury_shadow_ember_spark_prologue', name: "Chispa Agónica", description: "Un breve espasmo de energía te roza. Pierdes <strong>1 HP</strong>.", icon: '💥', effectType: FuryAbilityEffectType.PlayerDamage, value: 1, rarity: Rarity.Common,
+// };
 /** Board configuration for the prologue. Uses unified 'attacks'. */
 export const PROLOGUE_BOARD_CONFIG: BoardConfig = { rows: PROLOGUE_BOARD_ROWS, cols: PROLOGUE_BOARD_COLS, attacks: 3, gold: 3, traps: 0 };
 // PROLOGUE_PREDEFINED_ECHO_CHOICES_BASE_IDS is now in core/echos/index.ts
