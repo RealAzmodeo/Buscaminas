@@ -18,7 +18,7 @@ The `hooks/useGameEngine.ts` file was identified as overly large and complex, ha
 
 Logic within `useGameEngine.ts` was granulated into specialized hooks based on distinct areas of concern or game domains. Examples include:
 
-*   `useGameState.ts`: Manages core game state (status, phase, level, etc.).
+*   `useGameState.ts`: Manages core game state (status, phase, level, etc.), including new phases like `PRE_DEFEAT_SEQUENCE`.
 *   `usePlayerState.ts`: Manages player-specific state (HP, gold, shield, active effects).
 *   `useEnemyState.ts`: Manages enemy-specific state.
 *   `useBoard.ts`: Manages board state, generation, and related logic (e.g., battlefield reduction).
@@ -26,15 +26,15 @@ Logic within `useGameEngine.ts` was granulated into specialized hooks based on d
 *   `useFuries.ts`: Manages Fury selection (Oracle), application, and state.
 *   `usePlayerActions.ts`: Handles direct player interactions with the board (cell selection, marking).
 *   `useEnemyAI.ts`: Manages enemy decision-making and action execution.
-*   `useGameLoop.ts`: Controls the main game turn phases and transitions.
+*   `useGameLoop.ts`: Controls the main game turn phases and transitions, incorporating new phase logic from the `main` branch.
 *   `useMetaProgress.ts`: Manages meta-progression data (soul fragments, mirror upgrades, goals).
 *   `useRunStats.ts`: Tracks statistics for the current run.
-*   `usePrologue.ts`: Manages the prologue/tutorial sequence.
+*   `usePrologue.ts`: Manages the prologue/tutorial sequence, using `PROLOGUE_MESSAGES` as defined in the `main` branch's `constants.ts` (or moved if appropriate).
 *   `useGameEvents.ts`: Handles the game event queue (e.g., for floating text).
 
 ### 2. Hook Responsibilities and Dependencies
 
-*   Each specialized hook encapsulates its own state, effects, and functions related to its specific domain.
+*   Each specialized hook encapsulates its own state, effects, and functions related to its specific domain, sourcing its initial logic from the `main` branch version of `useGameEngine.ts`.
 *   Dependencies between hooks are managed by `useGameEngine.ts`, which passes necessary state or functions from one hook to another during initialization.
 *   Aim for hooks to expose a clear API (returned state and functions) for the orchestrator or other hooks to consume.
 
@@ -50,16 +50,16 @@ Logic within `useGameEngine.ts` was granulated into specialized hooks based on d
 
 ### 5. Utility Functions
 
-*   Generic, reusable utility functions that are not tied to a specific hook's state are placed in `utils/gameLogicUtils.ts` or other domain-specific utility files under `utils/`.
+*   Generic, reusable utility functions that are not tied to a specific hook's state (like `randomInt`, `getCurrentFloorNumber` from `main`'s `useGameEngine.ts`) are placed in `utils/gameLogicUtils.ts` or other domain-specific utility files under `utils/`.
 
 ## Rules for Echo and Fury Granulation
 
-Echo and Fury definitions were previously stored in large arrays/maps within `constants.ts`. They have been granulated for better organization and easier modification.
+Echo and Fury definitions were previously stored in large arrays/maps within `constants.ts` (as per the `main` branch structure). They have been granulated for better organization and easier modification.
 
 ### 1. Individual Definition Files
 
-*   Each Echo object is defined in its own TypeScript file within the `core/echos/` directory.
-*   Each FuryAbility object is defined in its own TypeScript file within the `core/furies/` directory.
+*   Each Echo object (from `main`'s `constants.ts`) is defined in its own TypeScript file within the `core/echos/` directory.
+*   Each FuryAbility object (from `main`'s `constants.ts`) is defined in its own TypeScript file within the `core/furies/` directory.
 
 ### 2. File Naming
 
@@ -68,8 +68,8 @@ Echo and Fury definitions were previously stored in large arrays/maps within `co
 
 ### 3. `index.ts` Aggregator
 
-*   An `index.ts` file within `core/echos/` imports all individual Echo definitions and exports aggregated collections (e.g., `ALL_ECHOS_MAP`, `ALL_ECHOS_LIST`, `INITIAL_STARTING_ECHOS`).
-*   Similarly, an `index.ts` file within `core/furies/` imports all individual Fury definitions and exports aggregated collections (e.g., `ALL_FURY_ABILITIES_MAP`, `INITIAL_STARTING_FURIESS`).
+*   An `index.ts` file within `core/echos/` imports all individual Echo definitions and exports aggregated collections (e.g., `ALL_ECHOS_MAP`, `ALL_ECHOS_LIST`, `INITIAL_STARTING_ECHOS`), mirroring the collections needed by `main`.
+*   Similarly, an `index.ts` file within `core/furies/` imports all individual Fury definitions and exports aggregated collections (e.g., `ALL_FURY_ABILITIES_MAP`, `INITIAL_STARTING_FURIESS`), mirroring `main`'s needs.
 *   This `index.ts` file becomes the single source of truth for these collections for the rest of the application.
 
 ### 4. Updating Definitions
@@ -80,7 +80,8 @@ Echo and Fury definitions were previously stored in large arrays/maps within `co
 
 ### 5. String ID Constants
 
-*   Base string identifiers for Echos (e.g., `BASE_ECHO_ECO_CASCADA`) are kept in the main `constants.ts` file and imported by individual Echo files if needed for their `baseId` property. This allows these base IDs to be referenced elsewhere in the codebase without importing the full Echo object.
+*   Base string identifiers for Echos (e.g., `BASE_ECHO_ECO_CASCADA` from `main`'s `constants.ts`) are kept in the main `constants.ts` file and imported by individual Echo files if needed for their `baseId` property.
+*   `FURY_ABILITIES_TO_AWAKEN_SEQUENTIALLY` is now managed in `core/furies/index.ts`.
 
 ## Maintaining Modularity
 
