@@ -900,34 +900,37 @@ export interface CellPosition {
 export interface GameStateCore {
   /** Current overall status/screen of the game (MainMenu, Playing, PostLevel, etc.). */
   status: GameStatus;
-  /** Current phase in the turn-based system (Player_Turn, Enemy_Thinking, etc.). */
-  currentPhase: GamePhase;
+  // currentPhase is now managed by useGamePhaseManager hook
   /** Overall run level (e.g., 1, 2, 3...). Starts at 0 for Prologue. */
   currentLevel: number;
   /** Current difficulty floor (Piso) affecting encounter generation. */
   currentFloor: number;
-  /** True if the Oracle (Fury selection) Minigame is active. */
-  isFuryMinigameActive: boolean;
-  /** Current phase of the Oracle Minigame. */
-  furyMinigamePhase: FuryMinigamePhase;
-  /** True if Oracle Minigame has been completed for the upcoming level. */
-  furyMinigameCompletedForThisLevel: boolean;
-  /** Fury abilities offered as choices in the Oracle Minigame. */
-  furyCardOptions: FuryAbility[];
-  /** Order of Fury cards after shuffling for Oracle Minigame display (maps display index to original option index). */
-  shuffledFuryCardOrder: number[];
-  /** Index of the card player picked in Oracle Minigame (visual display index on screen). */
-  playerSelectedFuryCardDisplayIndex: number | null;
-  /** The Fury ability chosen from the Oracle Minigame for the next enemy. */
-  oracleSelectedFuryAbility: FuryAbility | null;
+  // Fury Minigame state is now managed by useFuryMinigame hook
+  // isFuryMinigameActive: boolean;
+  // furyMinigamePhase: FuryMinigamePhase;
+  // furyMinigameCompletedForThisLevel: boolean; // This might still be needed in GameStateCore or derived
+  // furyCardOptions: FuryAbility[];
+  // shuffledFuryCardOrder: number[];
+  // playerSelectedFuryCardDisplayIndex: number | null;
+  // oracleSelectedFuryAbility: FuryAbility | null; // This is also returned by useFuryMinigame and might be stored in GameStateCore
   /** True if the game is currently in the prologue sequence. */
   isPrologueActive: boolean;
   /** Current step in the prologue's FTUE sequence. */
   prologueStep: number;
   /** Specific Fury ability for the prologue enemy (typically a very weak one). */
   prologueEnemyFuryAbility: FuryAbility | null;
-  /** ID of an Echo whose conditional effect just triggered (used for UI animation feedback). */
-  conditionalEchoTriggeredId: string | null;
+  // conditionalEchoTriggeredId is now managed by useAbilityHandler hook
+  // Fury Minigame state (isFuryMinigameActive, furyMinigamePhase, etc.) is managed by useFuryMinigame.
+  // GameStateCore retains oracleSelectedFuryAbility and furyMinigameCompletedForThisLevel, updated by useGameEngine.
+  furyMinigameCompletedForThisLevel: boolean;
+  oracleSelectedFuryAbility: FuryAbility | null;
+  // isPrologueActive, prologueStep, prologueEnemyFuryAbility are now managed by usePrologueManager hook.
+  // guidingTextKey is also closely related to prologue flow.
+  isPrologueActive: boolean; // To be removed or updated by usePrologueManager's effects
+  prologueStep: number; // To be removed or updated by usePrologueManager's effects
+  prologueEnemyFuryAbility: FuryAbility | null; // To be removed or updated by usePrologueManager's effects
+  guidingTextKey: GuidingTextKey; // Potentially moved or managed via prologueManager too
+
   /** True if 'Corazón del Abismo' choice UI is active. */
   isCorazonDelAbismoChoiceActive: boolean;
   /** Options for 'Corazón del Abismo' (random Epic Echo or duplicable active Echos). */
@@ -935,8 +938,7 @@ export interface GameStateCore {
     randomEpicEcho: Echo | null;
     duplicableActiveEcos: Echo[];
   } | null;
-  /** Queue of game events (floating text, sound effects) to be processed by the UI. */
-  eventQueue: GameEvent[];
+  // eventQueue is now managed by useGameEvents hook
   /** True if player has taken HP damage in the current level (used for some goal tracking). */
   playerTookDamageThisLevel: boolean;
   /** Current level of battlefield reduction (0 for normal, 1+ for reduced arenas). */
@@ -951,22 +953,16 @@ export interface GameStateCore {
   defeatReason?: 'attrition' | 'standard';
   /** Current dimensions (rows, cols) of the game board. Can change due to battlefield reduction. */
   currentBoardDimensions: { rows: number; cols: number };
-  /** State of the Abyss Map for the current run. Null if map is not active or generated yet. */
-  currentRunMap: RunMapState | null;
-  /** Current biome the player is in, affecting visuals and potentially board generation. */
-  currentBiomeId: BiomeId;
-  /** Total number of levels in the current map stretch (path between map choices). */
-  levelsInCurrentStretch: number;
-  /** Number of levels completed so far in the current stretch. */
-  currentStretchCompletedLevels: number;
-  /** Run level at which the current map stretch started. */
-  stretchStartLevel: number;
-  /** True if player needs to make a map path choice after completing the current level. */
-  mapDecisionPending: boolean;
-  /** Reward to be granted at the end of the current map stretch, if any. */
-  stretchRewardPending: { type: MapRewardType, value?: number } | null;
+  // Abyss Map state (currentRunMap, currentBiomeId, etc.) is now managed by useRunMapManager hook
+  // currentRunMap: RunMapState | null;
+  // currentBiomeId: BiomeId;
+  // levelsInCurrentStretch: number;
+  // currentStretchCompletedLevels: number;
+  // stretchStartLevel: number;
+  // mapDecisionPending: boolean;
+  // stretchRewardPending: { type: MapRewardType, value?: number } | null;
   /** True if player has taken their post-level action (e.g., Echo choice, Corazon choice). */
-  postLevelActionTaken: boolean;
+  postLevelActionTaken: boolean; // This might also move or be re-evaluated with new hooks
   /** Coordinates of the cell the AI is currently "thinking" about (for UI highlight). */
   aiThinkingCellCoords: AICellInfo | null;
   /** Coordinates of the cell the AI has targeted for its action (for UI highlight before reveal). */
